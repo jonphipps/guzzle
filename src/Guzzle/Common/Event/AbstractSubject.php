@@ -7,7 +7,7 @@ namespace Guzzle\Common\Event;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-abstract class AbstractSubject implements Subject
+abstract class AbstractSubject implements SubjectInterface
 {
     /**
      * @var EventManager

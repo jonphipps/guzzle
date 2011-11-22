@@ -2,11 +2,11 @@
 
 namespace Guzzle\Http\Plugin;
 
-use \Closure;
-use Guzzle\Common\Event\Observer;
-use Guzzle\Common\Event\Subject;
+use Closure;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Http\Message\RequestInterface;
-use Guzzle\Http\Pool\PoolInterface;
+use Guzzle\Http\Curl\CurlMultiInterface;
 
 /**
  * Plugin to automatically retry failed HTTP requests using truncated
@@ -14,7 +14,7 @@ use Guzzle\Http\Pool\PoolInterface;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class ExponentialBackoffPlugin implements Observer
+class ExponentialBackoffPlugin implements ObserverInterface
 {
     const DELAY_PARAM = 'plugins.exponential_backoff.retry_time';
 
@@ -121,7 +121,7 @@ class ExponentialBackoffPlugin implements Observer
     /**
      * {@inheritdoc}
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         // @codeCoverageIgnoreStart
         if (!($subject instanceof RequestInterface)) {
@@ -130,7 +130,7 @@ class ExponentialBackoffPlugin implements Observer
         // @codeCoverageIgnoreEnd
 
         switch ($event) {
-            case PoolInterface::POLLING_REQUEST:
+            case CurlMultiInterface::POLLING_REQUEST:
                 // The most frequent event, thus at the top of the switch
                 $delay = $subject->getParams()->get(self::DELAY_PARAM);
                 if ($delay) {
@@ -140,7 +140,6 @@ class ExponentialBackoffPlugin implements Observer
                         $context->remove($subject);
                         $context->add($subject);
                         $subject->getParams()->remove(self::DELAY_PARAM);
-
                         return true;
                     }
                 }
@@ -159,18 +158,8 @@ class ExponentialBackoffPlugin implements Observer
                         // Calculate how long to wait until the request should be retried
                         $delay = (int) call_user_func($this->delayClosure, $this->state[$key]);
                         // Send the request again
-                        $subject->setState(RequestInterface::STATE_NEW);
-
-                        if ($subject->getParams()->get('pool')) {
-                            // Pooled requests need to be sent via curl
-                            // multi, and the retry will happen after a
-                            // period of polling to prevent pool exclusivity
-                            $subject->getParams()->set(self::DELAY_PARAM, time() + $delay);
-                        } else {
-                            // Wait for a delay then retry the request
-                            sleep($delay);
-                            $subject->send();
-                        }
+                        $subject->setState(RequestInterface::STATE_TRANSFER);
+                        $subject->getParams()->set(self::DELAY_PARAM, time() + $delay);
                     }
                 }
                 break;

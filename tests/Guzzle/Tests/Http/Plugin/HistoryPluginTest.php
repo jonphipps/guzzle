@@ -3,6 +3,7 @@
 namespace Guzzle\Tests\Http\Plugin;
 
 use Guzzle\Guzzle;
+use Guzzle\Http\Client;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
@@ -24,8 +25,9 @@ class HistoryPluginTest extends \Guzzle\Tests\GuzzleTestCase
     protected function addRequests(HistoryPlugin $h, $num)
     {
         $requests = array();
+        $client = new Client('http://localhost/');
         for ($i = 0; $i < $num; $i++) {
-            $requests[$i] = RequestFactory::get('http://localhost/');
+            $requests[$i] = $client->get();
             $requests[$i]->setResponse(new Response(200), true);
             $requests[$i]->send();
             $h->add($requests[$i]);
@@ -66,7 +68,7 @@ class HistoryPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testIgnoresUnsentRequests()
     {
         $h = new HistoryPlugin();
-        $request = RequestFactory::get('http://localhost/');
+        $request = RequestFactory::create('GET', 'http://localhost/');
         $h->add($request);
         $this->assertEquals(0, count($h));
     }
@@ -128,10 +130,13 @@ class HistoryPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testUpdatesAddRequests()
     {
         $h = new HistoryPlugin();
-        $request = RequestFactory::get('http://localhost/');
+        $client = new Client('http://localhost/');
+        $client->getEventManager()->attach($h);
+
+        $request = $client->get();
         $request->setResponse(new Response(200), true);
-        $request->getEventManager()->attach($h);
         $request->send();
+
         $this->assertSame($request, $h->getLastRequest());
     }
 }

@@ -4,6 +4,7 @@ namespace Guzzle\Tests\Http\Plugin;
 
 use Guzzle\Guzzle;
 use Guzzle\Common\Log\ClosureLogAdapter;
+use Guzzle\Http\Client;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\Request;
@@ -25,6 +26,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
      * @var ClosureLogAdapter
      */
     private $logAdapter;
+    private $client;
 
     public function setUp()
     {
@@ -35,6 +37,8 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         );
 
         $this->plugin = new LogPlugin($this->logAdapter);
+        $this->client = new Client($this->getServer()->getUrl());
+        $this->client->getEventManager()->attach($this->plugin);
     }
 
     /**
@@ -74,11 +78,8 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testLogsRequestAndResponseContext()
     {
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
-        $request = new Request('GET', $this->getServer()->getUrl());
 
-        $plugin = new LogPlugin($this->logAdapter);
-        $request->getEventManager()->attach($plugin);
-
+        $request = $this->client->get();
         ob_start();
         $request->send();
         $message = ob_get_clean();
@@ -100,9 +101,11 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testLogsRequestAndResponseWireHeaders()
     {
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ndata");
-        $request = new Request('GET', $this->getServer()->getUrl());
+
+        $client = new Client($this->getServer()->getUrl());
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS);
-        $request->getEventManager()->attach($plugin);
+        $client->getEventManager()->attach($plugin);
+        $request = $client->get();
 
         ob_start();
         $request->send();
@@ -129,13 +132,14 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
      */
     public function testLogsRequestAndResponseWireContentAndHeaders()
     {
-        $request = new EntityEnclosingRequest('PUT', $this->getServer()->getUrl());
-        $request->setBody(EntityBody::factory('send'));
-        $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS | LogPlugin::LOG_BODY);
-        $request->getEventManager()->attach($plugin);
-
-        ob_start();
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ndata");
+
+        $client = new Client($this->getServer()->getUrl());
+        $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS | LogPlugin::LOG_BODY);
+        $client->getEventManager()->attach($plugin);
+        $request = $client->put('', null, EntityBody::factory('send'));
+        
+        ob_start();
         $request->send();
         $message = ob_get_clean();
 
@@ -162,9 +166,10 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
      */
     public function testLogsRequestAndResponseWireContentAndHeadersNonStreamable()
     {
-        $request = new EntityEnclosingRequest('PUT', $this->getServer()->getUrl());
+        $client = new Client($this->getServer()->getUrl());
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS | LogPlugin::LOG_BODY);
-        $request->getEventManager()->attach($plugin);
+        $client->getEventManager()->attach($plugin);
+        $request = $client->put();
 
         // Send the response from the dummy server as the request body
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nsend");
@@ -174,8 +179,8 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $tmpFile = tempnam('/tmp', 'testLogsRequestAndResponseWireContentAndHeadersNonStreamable');
         $request->setResponseBody(EntityBody::factory(fopen($tmpFile, 'w')));
 
-        ob_start();
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 8\r\n\r\nresponse");
+        ob_start();
         $request->send();
         $message = ob_get_clean();
 
@@ -202,19 +207,18 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
      */
     public function testLogsWhenExceptionsAreThrown()
     {
-        $request = new Request('GET', $this->getServer()->getUrl());
+        $client = new Client($this->getServer()->getUrl());
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_VERBOSE);
-        $request->getEventManager()->attach($plugin);
+        $client->getEventManager()->attach($plugin);
+        $request = $client->get();
 
         $this->getServer()->enqueue("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
 
         ob_start();
-
         try {
             $request->send();
             $this->fail('Exception for 404 was not thrown');
         } catch (\Exception $e) {}
-
         $message = ob_get_clean();
 
         $this->assertContains('127.0.0.1 - "GET / HTTP/1.1" - 404 0 - ', $message);
@@ -250,7 +254,10 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
      */
     public function testLogsTransactionsAtDifferentLevels($level, $request)
     {
+        $client = new Client();
         $request = RequestFactory::fromMessage($request);
+        $request->setClient($client);
+        
         $plugin = new LogPlugin(new ClosureLogAdapter(
             function($message, $priority, $extras = null) {
                 echo $message . "\n";

@@ -6,17 +6,17 @@ use Guzzle\Http\Curl\CurlException;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
+ * @covers Guzzle\Http\Curl\CurlException
  */
 class CurlExceptionTest extends \Guzzle\Tests\GuzzleTestCase
 {
-    /**
-     * @covers Guzzle\Http\Curl\CurlException
-     */
     public function testStoresCurlError()
     {
         $e = new CurlException();
-        $this->assertNull($e->getCurlError());
-        $this->assertSame($e, $e->setCurlError('test'));
-        $this->assertEquals('test', $e->getCurlError());
+        $this->assertNull($e->getError());
+        $this->assertNull($e->getErrorNo());
+        $this->assertSame($e, $e->setError('test', 12));
+        $this->assertEquals('test', $e->getError());
+        $this->assertEquals(12, $e->getErrorNo());
     }
 }

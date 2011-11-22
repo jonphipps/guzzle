@@ -2,10 +2,10 @@
 
 namespace Guzzle\Service\Command;
 
-use Guzzle\Common\Event\Observer;
-use Guzzle\Common\Event\Subject;
-use Guzzle\Http\Pool\PoolInterface;
-use Guzzle\Http\Pool\Pool;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Common\Event\SubjectInterface;
+use Guzzle\Http\Curl\CurlMultiInterface;
+use Guzzle\Http\Curl\CurlMulti;
 use Guzzle\Service\ClientInterface;
 use Guzzle\Service\Command\CommandInterface;
 
@@ -19,7 +19,7 @@ use Guzzle\Service\Command\CommandInterface;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class CommandSet implements \IteratorAggregate, \Countable, Observer
+class CommandSet implements \IteratorAggregate, \Countable, ObserverInterface
 {
     /**
      * @var array Collections of CommandInterface objects
@@ -27,26 +27,15 @@ class CommandSet implements \IteratorAggregate, \Countable, Observer
     protected $commands = array();
 
     /**
-     * @var PoolInterface Pool used for sending the requests in Parallel
-     */
-    protected $pool;
-
-    /**
      * Constructor
      *
      * @param array $commands (optional) Array of commands to add to the set
-     * @param PoolInterface $pool (optional) Pass a Pool object for executing the
-     *      commands in parallel.  Leave NULL to use the default Pool.
      */
-    public function __construct(array $commands = null, PoolInterface $pool = null)
+    public function __construct(array $commands = null)
     {
-        if ($commands) {
-            foreach ($commands as $command) {
-                $this->addCommand($command);
-            }
+        foreach ((array) $commands as $command) {
+            $this->addCommand($command);
         }
-
-        $this->pool = $pool ?: new Pool();
     }
 
     /**
@@ -83,12 +72,9 @@ class CommandSet implements \IteratorAggregate, \Countable, Observer
     public function execute()
     {
         // Keep a list of all commands with no client
-        $invalid = array();
-        foreach ($this->commands as $command) {
-            if (!$command->getClient()) {
-                $invalid[] = $command;
-            }
-        }
+        $invalid = array_filter($this->commands, function($command) {
+            return !$command->getClient();
+        });
 
         // If any commands do not have a client, then throw an exception
         if (count($invalid)) {
@@ -99,24 +85,28 @@ class CommandSet implements \IteratorAggregate, \Countable, Observer
 
         // Execute all serial commands
         foreach ($this->getSerialCommands() as $command) {
-            $command->execute();
-            // Trigger the result of the command to be processed
-            $command->getResult();
+            // Execute and then trigger the processing of the command result
+            $command->execute()->getResult();
         }
 
         // Execute all batched commands in parallel
         $parallel = $this->getParallelCommands();
         if (count($parallel)) {
-            $this->pool->reset();
+            $multis = array();
             // Prepare each request and send out client notifications
             foreach ($parallel as $command) {
                 $request = $command->prepare();
                 $request->getParams()->set('command', $command);
                 $request->getEventManager()->attach($this, -99999);
                 $command->getClient()->getEventManager()->notify('command.before_send', $command);
-                $this->pool->add($request);
+                $command->getClient()->getCurlMulti()->add($command->getRequest());
+                if (!in_array($command->getClient()->getCurlMulti(), $multis)) {
+                    $multis[] = $command->getClient()->getCurlMulti();
+                }
             }
-            $this->pool->send();
+            foreach ($multis as $multi) {
+                $multi->send();
+            }
         }
 
         return $this;
@@ -193,7 +183,7 @@ class CommandSet implements \IteratorAggregate, \Countable, Observer
      *
      * {@inheritdoc}
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         if ($event == 'request.complete' && $subject->getParams()->hasKey('command')) {
             $command = $subject->getParams()->get('command');

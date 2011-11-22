@@ -2,8 +2,8 @@
 
 namespace Guzzle\Http\Plugin;
 
-use Guzzle\Common\Event\Observer;
-use Guzzle\Common\Event\Subject;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\Response;
 
@@ -14,7 +14,7 @@ use Guzzle\Http\Message\Response;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class Md5ValidatorPlugin implements Observer
+class Md5ValidatorPlugin implements ObserverInterface
 {
     /**
      * @var int Maximum Content-Length in bytes to validate
@@ -49,7 +49,7 @@ class Md5ValidatorPlugin implements Observer
      * {@inheritdoc}
      * @throws UnexpectedValueException
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         /* @var $subject EntityEnclosingRequest */
         if ($event != 'request.complete' || !($subject instanceof RequestInterface)) {

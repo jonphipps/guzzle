@@ -4,7 +4,7 @@ namespace Guzzle\Service\Description;
 
 use Guzzle\Guzzle;
 use Guzzle\Common\Collection;
-use Guzzle\Common\Inspector;
+use Guzzle\Service\Inspector;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\EntityBody;

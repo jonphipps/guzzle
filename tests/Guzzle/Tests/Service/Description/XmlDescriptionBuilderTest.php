@@ -2,7 +2,7 @@
 
 namespace Guzzle\Tests\Service\Description;
 
-use Guzzle\Common\Inspector;
+use Guzzle\Service\Inspector;
 use Guzzle\Service\Description\ServiceDescription;
 use Guzzle\Service\Description\XmlDescriptionBuilder;
 

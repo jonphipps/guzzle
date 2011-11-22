@@ -3,7 +3,6 @@
 namespace Guzzle\Service\Description;
 
 use Guzzle\Common\NullObject;
-use Guzzle\Service\Command\CommandFactoryInterface;
 use Guzzle\Service\Description\DynamicCommandFactory;
 
 /**

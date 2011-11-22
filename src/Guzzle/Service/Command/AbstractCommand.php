@@ -2,7 +2,7 @@
 
 namespace Guzzle\Service\Command;
 
-use Guzzle\Common\Inspector;
+use Guzzle\Service\Inspector;
 use Guzzle\Common\Collection;
 use Guzzle\Common\NullObject;
 use Guzzle\Http\Message\Response;
@@ -84,7 +84,7 @@ abstract class AbstractCommand extends Collection implements CommandInterface
             $parts = explode('\\', get_class($this));
             while (array_shift($parts) !== 'Command');
             
-            return implode('.', array_map(array('Guzzle\\Common\\Inflector', 'snake'), $parts));
+            return implode('.', array_map(array('Guzzle\\Service\\Inflector', 'snake'), $parts));
         }
     }
 

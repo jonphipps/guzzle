@@ -17,19 +17,15 @@ class EntityBody extends Stream
     protected $contentEncoding = false;
 
     /**
-     * @var bool File types and whether or not they should be Gzipped.
+     * @var array File types and whether or not they should be Gzipped.
      */
     static protected $extensions = array(
-        'ai' => 'application/postscript',
-        'asc' => 'text/plain',
         'avi' => 'video/x-msvideo',
         'bmp' => 'image/bmp',
         'bz' => 'application/x-bzip',
         'bz2' => 'application/x-bzip2',
-        'cab' => 'application/vnd.ms-cab-compressed',
         'css' => 'text/css',
         'doc' => 'application/msword',
-        'eps' => 'application/postscript',
         'exe' => 'application/x-msdownload',
         'flv' => 'video/x-flv',
         'gif' => 'image/gif',
@@ -38,7 +34,6 @@ class EntityBody extends Stream
         'html' => 'text/html',
         'ico' => 'image/vnd.microsoft.icon',
         'ico' => 'image/x-icon',
-        'jpe' => 'image/jpeg',
         'jpeg' => 'image/jpeg',
         'jpg' => 'image/jpeg',
         'js' => 'application/javascript',
@@ -47,16 +42,10 @@ class EntityBody extends Stream
         'mp3' => 'audio/mpeg',
         'mpeg' => 'video/mpeg',
         'mpg' => 'video/mpeg',
-        'msi' => 'application/x-msdownload',
-        'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
-        'odt' => 'application/vnd.oasis.opendocument.text',
-        'ogg' => 'application/ogg',
         'pdf' => 'application/pdf',
-        'php' => 'text/html',
         'php' => 'text/x-php',
         'png' => 'image/png',
         'ppt' => 'application/vnd.ms-powerpoint',
-        'ps' => 'application/postscript',
         'psd' => 'image/vnd.adobe.photoshop',
         'qt' => 'video/quicktime',
         'rar' => 'application/x-rar-compressed',
@@ -87,13 +76,11 @@ class EntityBody extends Stream
     public static function factory($resource = '', $size = null)
     {
         if (is_resource($resource)) {
-            
             return new self($resource, $size);
         } else if (is_string($resource)) {
             $stream = fopen('php://temp', 'r+');
             fwrite($stream, $resource);
             rewind($stream);
-            
             return new self($stream);
         } else if ($resource instanceof self) {
             return $resource;
@@ -141,7 +128,6 @@ class EntityBody extends Stream
                 return false;
             }
             // @codeCoverageIgnoreEnd
-
             $this->seek(0);
             if (fread($this->stream, 3) == "\x1f\x8b\x08") {
                 $offsetStart = 10;
@@ -258,22 +244,10 @@ class EntityBody extends Stream
         // @codeCoverageIgnoreEnd
 
         $handle = fopen('php://temp', 'r+');
-        if (!$handle) {
-            // @codeCoverageIgnoreStart
-            return false;
-            // @codeCoverageIgnoreEnd
-        }
-
         $filter = @stream_filter_append($handle, $filter, STREAM_FILTER_WRITE);
         if (!$filter) {
             return false;
         }
-
-        // @codeCoverageIgnoreStart
-        if ($filter === false) {
-            return false;
-        }
-        // @codeCoverageIgnoreEnd
 
         // Seek to the beginning of the stream if possible
         $this->seek(0);

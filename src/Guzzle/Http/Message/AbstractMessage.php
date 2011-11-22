@@ -25,7 +25,7 @@ abstract class AbstractMessage implements MessageInterface
     /**
      * @var array Cache-Control directive information
      */
-    protected $cacheControl = null;
+    private $cacheControl = array();
 
     /*
      * @var string HTTP protocol version of the message
@@ -40,10 +40,6 @@ abstract class AbstractMessage implements MessageInterface
      */
     public function getParams()
     {
-        if (!$this->params) {
-            $this->params = new Collection();
-        }
-
         return $this->params;
     }
 
@@ -68,7 +64,7 @@ abstract class AbstractMessage implements MessageInterface
      * @param string $header Header to retrieve.
      * @param mixed $default (optional) If the header is not found, the passed
      *      $default value will be returned
-     * @param int $match (optional) Bitwise match setting:
+     * @param int $match (optional) Match mode:
      *     0 - Exact match
      *     1 - Case insensitive match
      *     2 - Regular expression match
@@ -86,11 +82,9 @@ abstract class AbstractMessage implements MessageInterface
      *
      * @param array $names (optional) Pass an array of header names to retrieve
      *      only a particular subset of headers.
-     * @param int $match (optional) Bitwise match setting:
-     *      0 - Exact match
-     *      1 - Case insensitive match
-     *      2 - Regular expression match
+     * @param int $match (optional) Match mode
      *
+     * @see AbstractMessage::getHeader
      * @return Collection Returns a collection of all headers if no $headers
      *      array is specified, or a Collection of only the headers matching
      *      the headers in the $headers array.
@@ -108,11 +102,9 @@ abstract class AbstractMessage implements MessageInterface
      * Returns TRUE or FALSE if the specified header is present.
      *
      * @param string $header The header to check.
-     * @param int $match (optional) Bitwise key match setting:
-     *      0 - Exact match
-     *      1 - Case insensitive match
-     *      2 - Regular expression match
+     * @param int $match (optional) Match mode
      *
+     * @see AbstractMessage::getHeader
      * @return bool|mixed Returns the matching header or FALSE if no match found
      */
     public function hasHeader($header, $match = Collection::MATCH_EXACT)
@@ -124,11 +116,9 @@ abstract class AbstractMessage implements MessageInterface
      * Remove a specific HTTP header.
      *
      * @param string $header HTTP header to remove.
-     * @param int $match (optional) Bitwise match setting:
-     *      0 - Exact match
-     *      1 - Case insensitive match
-     *      2 - Regular expression match
+     * @param int $match (optional) Bitwise match setting
      *
+     * @see AbstractMessage::getHeader
      * @return AbstractMessage
      */
     public function removeHeader($header, $match = Collection::MATCH_EXACT)
@@ -228,9 +218,23 @@ abstract class AbstractMessage implements MessageInterface
     }
 
     /**
+     * Check to see if the modified headers need to reset any of the managed
+     * headers like cache-control
+     *
+     * @param string $action One of set or remove
+     * @param string|array $keyOrArray Header or headers that changed
+     */
+    protected function changedHeader($action, $keyOrArray)
+    {
+        if (in_array('Cache-Control', (array) $keyOrArray)) {
+            $this->parseCacheControlDirective();
+        }
+    }
+
+    /**
      * Parse the Cache-Control HTTP header into an array
      */
-    protected function parseCacheControlDirective()
+    private function parseCacheControlDirective()
     {
         $this->cacheControl = array();
         $cacheControl = $this->getHeader('Cache-Control');
@@ -248,7 +252,7 @@ abstract class AbstractMessage implements MessageInterface
     /**
      * Rebuild the Cache-Control HTTP header using the user-specified values
      */
-    protected function rebuildCacheControlDirective()
+    private function rebuildCacheControlDirective()
     {
         $cacheControl = array();
         foreach ($this->cacheControl as $key => $value) {
@@ -260,19 +264,5 @@ abstract class AbstractMessage implements MessageInterface
         }
 
         $this->headers->set('Cache-Control', implode(', ', $cacheControl));
-    }
-
-    /**
-     * Check to see if the modified headers need to reset any of the managed
-     * headers like cache-control
-     *
-     * @param string $action One of set or remove
-     * @param string|array $keyOrArray Header or headers that changed
-     */
-    protected function changedHeader($action, $keyOrArray)
-    {
-        if (in_array('Cache-Control', (array)$keyOrArray)) {
-            $this->parseCacheControlDirective();
-        }
     }
 }

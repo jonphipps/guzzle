@@ -2,8 +2,8 @@
 
 namespace Guzzle\Http\Plugin;
 
-use Guzzle\Common\Event\Observer;
-use Guzzle\Common\Event\Subject;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\Response;
 
@@ -12,7 +12,7 @@ use Guzzle\Http\Message\Response;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class HistoryPlugin implements Observer, \IteratorAggregate, \Countable
+class HistoryPlugin implements ObserverInterface, \IteratorAggregate, \Countable
 {
     /**
      * @var int The maximum number of requests to maintain in the history
@@ -122,7 +122,7 @@ class HistoryPlugin implements Observer, \IteratorAggregate, \Countable
     /**
      * {@inheritdoc}
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         if ($event == 'request.complete') {
             $this->add($subject);

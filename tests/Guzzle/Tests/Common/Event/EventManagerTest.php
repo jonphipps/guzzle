@@ -2,16 +2,16 @@
 
 namespace Guzzle\Tests\Common\Event;
 
-use Guzzle\Tests\Common\Mock\MockObserver;
-use Guzzle\Tests\Common\Mock\MockSubject;
-use Guzzle\Common\Event\Subject;
+use Guzzle\Tests\Mock\MockObserver;
+use Guzzle\Tests\Mock\MockSubject;
+use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Common\Event\EventManager;
-use Guzzle\Common\Event\Observer;
+use Guzzle\Common\Event\ObserverInterface;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class EventManagerTest extends \Guzzle\Tests\GuzzleTestCase implements Observer
+class EventManagerTest extends \Guzzle\Tests\GuzzleTestCase implements ObserverInterface
 {
     /**
      * @covers Guzzle\Common\Event\EventManager::attach
@@ -56,7 +56,7 @@ class EventManagerTest extends \Guzzle\Tests\GuzzleTestCase implements Observer
         $subject = new EventManager(new MockSubject());
         $subject->attach($observer);
         $this->assertEquals(array($observer), $subject->getAttached());
-        $this->assertEquals(array($observer), $subject->getAttached('Guzzle\Tests\Common\Mock\MockObserver'));
+        $this->assertEquals(array($observer), $subject->getAttached('Guzzle\Tests\Mock\MockObserver'));
     }
 
     /**
@@ -102,10 +102,10 @@ class EventManagerTest extends \Guzzle\Tests\GuzzleTestCase implements Observer
         $observer = new MockObserver();
         $subject = new EventManager(new MockSubject());
         $this->assertFalse($subject->hasObserver($observer));
-        $this->assertFalse($subject->hasObserver('Guzzle\Tests\Common\Mock\MockObserver'));
+        $this->assertFalse($subject->hasObserver('Guzzle\Tests\Mock\MockObserver'));
         $subject->attach($observer);
         $this->assertTrue($subject->hasObserver($observer));
-        $this->assertTrue($subject->hasObserver('Guzzle\Tests\Common\Mock\MockObserver'));
+        $this->assertTrue($subject->hasObserver('Guzzle\Tests\Mock\MockObserver'));
     }
 
     /**
@@ -229,7 +229,7 @@ class EventManagerTest extends \Guzzle\Tests\GuzzleTestCase implements Observer
     /**
      * {@inheritdoc}
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         return;
     }

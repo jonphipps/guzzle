@@ -162,25 +162,21 @@ class Response extends AbstractMessage
         }
 
         $this->setStatus($statusCode);
+        $this->body = $body ?: EntityBody::factory();
+        $this->headers = new Collection();
+        $this->params = new Collection();
 
-        if ($headers && (!is_array($headers) && !($headers instanceof Collection))) {
-            throw new BadResponseException('Invalid headers argument received');
+        if ($headers) {
+            if (!is_array($headers) && !($headers instanceof Collection)) {
+                throw new BadResponseException('Invalid headers argument received');
+            } else {
+                foreach ($headers as $key => $value) {
+                    $this->setHeader($key, $value);
+                }
+            }
         }
 
-        $this->headers = ($headers) ? (is_array($headers) ? new Collection($headers) : $headers) : new Collection();
-        $this->parseCacheControlDirective();
-
-        $this->body = $body ?: EntityBody::factory('');
-
-        if ($body instanceof EntityBody) {
-            $this->body = $body;
-        } else if ($body && is_scalar($body)) {
-            $this->body = EntityBody::factory((string) $body);
-        } else if ($body) {
-            throw new BadResponseException('Invalid body sent to ' . __CLASS__ . ' constructor');
-        } else {
-            $this->body = EntityBody::factory('');
-        }
+        $this->body = EntityBody::factory($body ?: '');
     }
 
     /**
@@ -203,7 +199,7 @@ class Response extends AbstractMessage
      */
     public function getBody($asString = false)
     {
-        return ($asString) ? (string) $this->body : $this->body;
+        return $asString ? (string) $this->body : $this->body;
     }
 
     /**
@@ -247,8 +243,7 @@ class Response extends AbstractMessage
      *
      * @return array|string|null Returns all stats if no key is set, a single
      *      stat if a key is set, or null if a key is set and not found
-     *
-     * http://www.php.net/manual/en/function.curl-getinfo.php
+     * @link http://www.php.net/manual/en/function.curl-getinfo.php
      */
     public function getInfo($key = null)
     {

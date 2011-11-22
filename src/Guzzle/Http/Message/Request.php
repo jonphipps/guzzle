@@ -5,11 +5,9 @@ namespace Guzzle\Http\Message;
 use Guzzle\Guzzle;
 use Guzzle\Common\Collection;
 use Guzzle\Common\Event\EventManager;
-use Guzzle\Common\Event\Observer;
-use Guzzle\Http\Curl\CurlFactoryInterface;
-use Guzzle\Http\Curl\CurlFactory;
-use Guzzle\Http\Curl\CurlHandle;
-use Guzzle\Http\Curl\CurlException;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Http\ClientInterface;
+use Guzzle\Http\CurlException;
 use Guzzle\Http\QueryString;
 use Guzzle\Http\Cookie;
 use Guzzle\Http\EntityBody;
@@ -32,9 +30,6 @@ use Guzzle\Http\Url;
  *  request.receive.header      array             Received response header
  *  request.bad_response        null              Received non-success response
  *  request.set_response        Response          Manually set a response
- *  request.curl.before_create  null              About to create a CurlHandle
- *  request.curl.after_create   CurlHandle        Created a CurlHandle
- *  request.curl.release        CurlHandle        About to release a CurlHandle
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
@@ -51,6 +46,11 @@ class Request extends AbstractMessage implements RequestInterface
     protected $method;
 
     /**
+     * @var ClientInterface
+     */
+    protected $client;
+
+    /**
      * @var EventManager Subject mediator
      */
     protected $eventManager;
@@ -64,11 +64,6 @@ class Request extends AbstractMessage implements RequestInterface
      * @var EntityBody Response body
      */
     protected $responseBody;
-
-    /**
-     * @var bool Has the response been processed
-     */
-    protected $processedResponse = false;
 
     /**
      * @var string State of the request object
@@ -101,16 +96,6 @@ class Request extends AbstractMessage implements RequestInterface
     protected $curlOptions;
 
     /**
-     * @var CurlFactory Curl factory object used to create cURL handles
-     */
-    protected $curlFactory;
-
-    /**
-     * @var CurlHandle cURL handle associated with the request
-     */
-    protected $curlHandle;
-
-    /**
      * Create a new request
      *
      * @param string $method HTTP method
@@ -118,42 +103,30 @@ class Request extends AbstractMessage implements RequestInterface
      *      header, and URI are parsed from the full URL.  If query string
      *      parameters are present they will be parsed as well.
      * @param array|Collection $headers (optional) HTTP headers
-     * @param CurlFactoryInterface $curlFactory (optional) Curl factory object
      */
-    public function __construct($method, $url, $headers = array(), CurlFactoryInterface $curlFactory = null)
+    public function __construct($method, $url, $headers = array())
     {
         $this->method = strtoupper($method);
-        if (is_array($headers)) {
-            $this->headers = new Collection($headers);
-        } else if ($headers instanceof Collection) {
-            $this->headers = $headers;
-        } else {
-            $this->headers = new Collection();
-        }
-
-        $this->curlFactory = $curlFactory ?: CurlFactory::getInstance();
+        $this->headers = new Collection();
         $this->curlOptions = new Collection();
-        $this->cookie = Cookie::factory($this->getHeader('Cookie'));
-        $this->eventManager = new EventManager($this);
-        $this->onComplete = array(__CLASS__, 'onComplete');
-
+        $this->params = new Collection();
+        $this->setUrl($url);
+        if ($headers) {
+            foreach ($headers as $key => $value) {
+                if ($key == 'Host') {
+                    $this->removeHeader($key);
+                }
+                $this->setHeader($key, $value);
+            }
+        }
         if (!$this->hasHeader('User-Agent', true)) {
             $this->setHeader('User-Agent', Guzzle::getDefaultUserAgent());
         }
-        
-        $this->parseCacheControlDirective();
-        $this->setState(self::STATE_NEW);
-        $this->setUrl($url);
-    }
 
-    /**
-     * Release curl handle
-     *
-     * @codeCoverageIgnore
-     */
-    public function __destruct()
-    {
-        $this->releaseCurlHandle();
+        $this->cookie = Cookie::factory($this->getHeader('Cookie'));
+        $this->eventManager = new EventManager($this);
+        $this->onComplete = array(__CLASS__, 'onComplete');
+        $this->setState(self::STATE_NEW);
     }
 
     /**
@@ -167,12 +140,13 @@ class Request extends AbstractMessage implements RequestInterface
         }
         $this->eventManager = $eventManager;
         $this->curlOptions = clone $this->curlOptions;
-        $this->headers = clone $this->headers;
         $this->params = clone $this->params;
         $this->url = clone $this->url;
-        $this->curlHandle = $this->response = $this->responseBody = null;
-        $this->params->set('queued_response', false);
-        $this->processedResponse = false;
+        $this->headers = clone $this->headers;
+        $this->response = $this->responseBody = null;
+        $this->params->remove('curl_handle')
+             ->remove('queued_response')
+             ->remove('curl_multi');
         $this->setState(RequestInterface::STATE_NEW);
     }
 
@@ -217,6 +191,30 @@ class Request extends AbstractMessage implements RequestInterface
         }
 
         $request->getEventManager()->notify('request.success', $response);
+    }
+
+    /**
+     * Set the client used to transport the request
+     *
+     * @param ClientInterface $client
+     *
+     * @return Request
+     */
+    public function setClient(ClientInterface $client)
+    {
+        $this->client = $client;
+
+        return $this;
+    }
+
+    /**
+     * Get the client used to transport the request
+     *
+     * @return ClientInterface $client
+     */
+    public function getClient()
+    {
+        return $this->client;
     }
 
     /**
@@ -288,31 +286,11 @@ class Request extends AbstractMessage implements RequestInterface
      */
     public function send()
     {
-        if ($this->state != self::STATE_NEW) {
-            $this->setState(self::STATE_NEW);
-        }
-        try {
-            try {
-                $this->state = self::STATE_TRANSFER;
-                $this->getEventManager()->notify('request.before_send');
-                if (!$this->response && !$this->getParams()->get('queued_response')) {
-                    curl_exec($this->getCurlHandle()->getHandle());
-                }
-                $this->setState(self::STATE_COMPLETE);
-            } catch (BadResponseException $e) {
-                $this->getEventManager()->notify('request.bad_response');
-                if ($this->response) {
-                    $e->setResponse($this->response);
-                }
-                throw $e;
-            }
-        } catch (RequestException $e) {
-            $e->setRequest($this);
-            $this->getEventManager()->notify('request.exception', $e);
-            throw $e;
+        if (!$this->client) {
+            throw new \RuntimeException('A client must be set on the request');
         }
 
-        return $this->response;
+        return $this->client->send($this);
     }
 
     /**
@@ -336,7 +314,9 @@ class Request extends AbstractMessage implements RequestInterface
      */
     public function getQuery($asString = false)
     {
-        return $asString ? (string) $this->url->getQuery() : $this->url->getQuery();
+        return $asString 
+            ? (string) $this->url->getQuery()
+            : $this->url->getQuery();
     }
 
     /**
@@ -416,7 +396,7 @@ class Request extends AbstractMessage implements RequestInterface
         if (!$curlValue) {
             return $this->protocolVersion;
         } else {
-            return ($this->protocolVersion === '1.0')
+            return $this->protocolVersion === '1.0'
                 ? CURL_HTTP_VERSION_1_0 : CURL_HTTP_VERSION_1_1;
         }
     }
@@ -595,19 +575,10 @@ class Request extends AbstractMessage implements RequestInterface
     public function setState($state)
     {
         $this->state = $state;
-
-        switch ($state) {
-            case self::STATE_NEW:
-                $this->response = null;
-                $this->responseBody = null;
-                $this->processedResponse = false;
-                $this->getParams()->remove('queued_response');
-                $this->curlOptions->clear();
-                $this->releaseCurlHandle();
-                break;
-            case self::STATE_COMPLETE:
-                $this->processResponse();
-                break;
+        if ($this->state == self::STATE_NEW) {
+            $this->responseBody = $this->response = null;
+        } else if ($this->state == self::STATE_COMPLETE) {
+            $this->processResponse();
         }
 
         return $this;
@@ -621,45 +592,6 @@ class Request extends AbstractMessage implements RequestInterface
     public function getCurlOptions()
     {
         return $this->curlOptions;
-    }
-
-    /**
-     * Get the cURL handle
-     *
-     * This method will only create the cURL handle once.  After calling this
-     * method, subsequent modifications to this request will not ever take
-     * effect or modify the curl handle associated with the request until
-     * ->setState('new') is called, causing a new cURL handle to be given to
-     * the request (using a smart factory, the new handle might be the same
-     * handle).
-     *
-     * @return CurlHandle|null Returns NULL if no handle should be created
-     */
-    public function getCurlHandle()
-    {
-        // Create a new cURL handle using the cURL factory
-        if (!$this->curlHandle) {
-            $this->getEventManager()->notify('request.curl.before_create');
-            $this->curlHandle = $this->curlFactory->getHandle($this);
-            $this->getEventManager()->notify('request.curl.after_create', $this->curlHandle);
-        }
-
-        return $this->curlHandle;
-    }
-
-    /**
-     * Set the factory that will create cURL handles based on the request
-     *
-     * @param CurlFactoryInterface $factory Factory used to create cURL handles
-     *
-     * @return Request
-     * @codeCoverageIgnore
-     */
-    public function setCurlFactory(CurlFactoryInterface $factory)
-    {
-        $this->curlFactory = $factory;
-
-        return $this;
     }
 
     /**
@@ -898,13 +830,9 @@ class Request extends AbstractMessage implements RequestInterface
         if (in_array('Host', $keys)) {
             $parts = explode(':', $this->getHeader('Host'));
             $this->url->setHost($parts[0]);
-            if (isset($parts[1])) {
-                $this->url->setPort($parts[1]);
-            } else if ($this->url->getScheme() == 'http') {
-                $this->url->setPort(80);
-            } else if ($this->url->getScheme() == 'https') {
-                $this->url->setPort(443);
-            }
+            $this->setPort(!empty($parts[1])
+                ? $parts[1]
+                : ($this->url->getScheme() == 'https' ? 443 : 80));
         }
     }
 
@@ -916,7 +844,7 @@ class Request extends AbstractMessage implements RequestInterface
     protected function getResponseBody()
     {
         if ($this->responseBody === null) {
-            $this->responseBody = EntityBody::factory('');
+            $this->responseBody = EntityBody::factory();
         }
 
         return $this->responseBody;
@@ -929,121 +857,27 @@ class Request extends AbstractMessage implements RequestInterface
      */
     protected function processResponse()
     {
-        if (!$this->processedResponse) {
-
-            // Use the queued response if one is set
-            if ($this->getParams()->get('queued_response')) {
-                $this->response = $this->getParams()->get('queued_response');
-                $this->responseBody = $this->response->getBody();
-                $this->getParams()->remove('queued_response');
-            } else if ($this->curlHandle && $this->curlHandle->getErrorNo()) {
-                $error = $this->curlHandle->getError();
-                $e = new CurlException('[curl] '
-                    . $this->curlHandle->getErrorNo() . ': ' . $error
-                    . ' [url] ' . $this->getUrl() . ' [info] '
-                    . var_export($this->curlHandle->getInfo(), true)
-                    . ' [debug] ' . $this->curlHandle->getStderr());
-
-                $e->setRequest($this);
-                $e->setCurlError($error);
-                $this->curlFactory->releaseHandle($this->curlHandle, true);
-                $this->curlHandle = null;
-
-                throw $e;
-            }
-
-            if (!$this->response) {
-                $e = new RequestException(
-                    'Unable to set state to complete because no response has '
-                    . 'been received by the request'
-                );
-                $e->setRequest($this);
-
-                throw $e;
-            }
-
-            // cURL can modify the request from it's initial HTTP message.  The
-            // following code parses the sent HTTP request headers from cURL and
-            // updates the request object to most accurately reflect the HTTP
-            // message sent over the wire.
-            if ($this->curlHandle && $this->curlHandle->isAvailable()) {
-
-                // Set the transfer stats on the response
-                $log = $this->curlHandle->getStderr();
-                $this->response->setInfo(array_merge(array(
-                    'stderr' => $log
-                ), $this->curlHandle->getInfo()));
-
-                // Parse the cURL stderr output for outgoing requests
-                $headers = '';
-                fseek($this->curlHandle->getStderr(true), 0);
-                while (($line = fgets($this->curlHandle->getStderr(true))) !== false) {
-                    if ($line && $line[0] == '>') {
-                        $headers = substr(trim($line), 2) . "\r\n";
-                        while (($line = fgets($this->curlHandle->getStderr(true))) !== false) {
-                            if ($line[0] == '*' || $line[0] == '<') {
-                                break;
-                            } else {
-                                $headers .= trim($line) . "\r\n";
-                            }
-                        }
-                    }
-                }
-
-                if ($headers) {
-                    $parsed = RequestFactory::parseMessage($headers);
-                    if (!empty($parsed['method'])) {
-                        $this->method = $parsed['method'];
-                    }
-                    if (!empty($parsed['parts']['host'])) {
-                        $this->setHost($parsed['parts']['host']);
-                    }
-                    if (!empty($parsed['parts']['port'])) {
-                        $this->setPort($parsed['parts']['port']);
-                    }
-                    if (!empty($parsed['protocol_version'])) {
-                        $this->setProtocolVersion($parsed['protocol_version']);
-                    }
-                    $this->headers->clear();
-                    foreach ($parsed['headers'] as $name => $value) {
-                        $this->setHeader($name, $value);
-                    }
-                }
-            }
-
-            $this->state = self::STATE_COMPLETE;
-            $this->getEventManager()->notify('request.sent');
-
-            // Some response processors will remove the response or reset the state
-            if ($this->state == RequestInterface::STATE_COMPLETE) {
-                $this->processedResponse = true;
-                $this->getEventManager()->notify('request.complete', $this->response);
-                // Release the cURL handle
-                $this->releaseCurlHandle();
-                // Pass the request to the onComplete handler
-                call_user_func($this->onComplete, $this, $this->response, array(__CLASS__, 'defaultOnComplete'));
-            }
+        // Use the queued response if one is set
+        if ($this->getParams()->get('queued_response')) {
+            $this->response = $this->getParams()->get('queued_response');
+            $this->responseBody = $this->response->getBody();
+            $this->getParams()->remove('queued_response');
         }
 
-        return $this;
-    }
+        if (!$this->response) {
+            $e = new RequestException('Error completing request');
+            $e->setRequest($this);
+            throw $e;
+        }
 
-    /**
-     * Release the cURL handle if one is claimed
-     *
-     * @return Request
-     */
-    public function releaseCurlHandle()
-    {
-        if ($this->curlHandle) {
-            $this->getEventManager()->notify('request.curl.release', $this->curlHandle);
-            // Check if the handle should be closed
-            $this->curlFactory->releaseHandle(
-                $this->curlHandle,
-                ($this->response && $this->response->getConnection() == 'close') || $this->getHeader('Connection') == 'close' || $this->getProtocolVersion() === '1.0'
-            );
-            
-            $this->curlHandle = null;
+        $this->state = self::STATE_COMPLETE;
+        $this->getEventManager()->notify('request.sent');
+
+        // Some response processors will remove the response or reset the state
+        if ($this->state == RequestInterface::STATE_COMPLETE) {
+            $this->getEventManager()->notify('request.complete', $this->response);
+            // Pass the request to the onComplete handler
+            call_user_func($this->onComplete, $this, $this->response, array(__CLASS__, 'defaultOnComplete'));
         }
 
         return $this;

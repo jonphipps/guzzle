@@ -2,10 +2,11 @@
 
 namespace Guzzle\Tests\Http\Plugin;
 
+use Guzzle\Http\Client;
 use Guzzle\Http\Plugin\ExponentialBackoffPlugin;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\RequestFactory;
-use Guzzle\Http\Pool\Pool;
+use Guzzle\Http\Curl\CurlMulti;
 
 /**
  * @group server
@@ -67,8 +68,9 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $this->getServer()->flush();
         
         $plugin = new ExponentialBackoffPlugin(2, null, array($this, 'delayClosure'));
-        $request = RequestFactory::get($this->getServer()->getUrl());
-        $request->getEventManager()->attach($plugin);
+        $client = new Client($this->getServer()->getUrl());
+        $client->getEventManager()->attach($plugin);
+        $request = $client->get();
         $request->send();
 
         // Make sure it eventually completed successfully
@@ -95,9 +97,9 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
         ));
 
         $plugin = new ExponentialBackoffPlugin(2, null, array($this, 'delayClosure'));
-        $request = RequestFactory::get($this->getServer()->getUrl());
-        $request->getEventManager()->attach($plugin);
-
+        $client = new Client($this->getServer()->getUrl());
+        $client->getEventManager()->attach($plugin);
+        $request = $client->get();
         // This will fail because the plugin isn't retrying the request because
         // the max number of retries is exceeded (1 > 0)
         $request->send();
@@ -105,7 +107,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
 
     /**
      * @covers Guzzle\Http\Plugin\ExponentialBackoffPlugin::update
-     * @covers Guzzle\Http\Pool\Pool
+     * @covers Guzzle\Http\Curl\CurlMulti
      */
     public function testRetriesPooledRequestsUsingDelayAndPollingEvent()
     {
@@ -121,12 +123,10 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
             return 1;
         });
         
-        $request = RequestFactory::get($this->getServer()->getUrl());
-        $request->getEventManager()->attach($plugin);
-
-        $pool = new Pool();
-        $pool->add($request);
-        $pool->send();
+        $client = new Client($this->getServer()->getUrl());
+        $client->getEventManager()->attach($plugin);
+        $request = $client->get();
+        $request->send();
 
         // Make sure it eventually completed successfully
         $this->assertEquals('data', $request->getResponse()->getBody(true));

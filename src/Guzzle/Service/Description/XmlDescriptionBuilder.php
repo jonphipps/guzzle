@@ -2,8 +2,8 @@
 
 namespace Guzzle\Service\Description;
 
-use Guzzle\Common\Inflector;
-use Guzzle\Common\Inspector;
+use Guzzle\Service\Inflector;
+use Guzzle\Service\Inspector;
 
 /**
  * Build service descriptions using an XML document

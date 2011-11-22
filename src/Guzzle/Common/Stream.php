@@ -196,7 +196,6 @@ class Stream
         } else {
             $size = strlen((string) $this);
             $this->seek(0);
-
             return $size;
         }
     }
@@ -372,7 +371,6 @@ class Stream
         if (isset($this->filters[$key])) {
             stream_filter_remove($this->filters[$key]);
             unset($this->filters[$key]);
-
             return true;
         }
 

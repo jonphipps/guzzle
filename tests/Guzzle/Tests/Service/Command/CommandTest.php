@@ -7,7 +7,7 @@ use Guzzle\Service\Client;
 use Guzzle\Service\Command\CommandInterface;
 use Guzzle\Service\Command\AbstractCommand;
 use Guzzle\Service\Description\ApiCommand;
-use Guzzle\Service\Plugin\MockPlugin;
+use Guzzle\Http\Plugin\MockPlugin;
 use Guzzle\Tests\Service\Mock\Command\MockCommand;
 use Guzzle\Tests\Service\Mock\Command\Sub\Sub;
 

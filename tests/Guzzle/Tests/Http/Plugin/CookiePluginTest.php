@@ -5,6 +5,7 @@ namespace Guzzle\Tests\Http\Plugin;
 use Guzzle\Tests\Http\CookieJar\ArrayCookieJarTest;
 use Guzzle\Http\Plugin\CookiePlugin;
 use Guzzle\Http\CookieJar\ArrayCookieJar;
+use Guzzle\Http\Client;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Message\Request;
@@ -283,7 +284,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $request = null;
         if ($url) {
-            $request = RequestFactory::get($url);
+            $request = RequestFactory::create('GET', $url);
         }
 
         foreach ((array) $cookie as $c) {
@@ -420,6 +421,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
 
         // Create a new request, attach the cookie plugin, set a mock response
         $request = new Request('GET', 'http://www.example.com/');
+        $request->setClient(new Client());
         $request->getEventManager()->attach($this->plugin);
         $request->setResponse($response, true);
         $request->send();
@@ -455,9 +457,13 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
         ));
         
         $request1 = new Request('GET', 'https://a.y.example.com/acme/');
+        $request1->setClient(new Client());
         $request2 = new Request('GET', 'https://a.y.example.com/acme/');
+        $request2->setClient(new Client());
         $request3 = new Request('GET', 'http://a.y.example.com/acme/');
+        $request3->setClient(new Client());
         $request4 = new Request('GET', 'http://a.y.example.com/acme/');
+        $request4->setClient(new Client());
 
         $request1->getEventManager()->attach($this->plugin);
         $request2->getEventManager()->attach($this->plugin);
@@ -515,8 +521,9 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
             "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\rn"
         ));
 
-        $request = RequestFactory::get($this->getServer()->getUrl());
+        $request = RequestFactory::create('GET', $this->getServer()->getUrl());
         $request->getEventManager()->attach($this->plugin);
+        $request->setClient(new Client());
 
         $request->send();
         $this->assertNull($request->getHeader('Cookie'));
@@ -558,12 +565,14 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
             "Content-Length: 0\r\n\r\n"
         ));
 
-        $request = RequestFactory::get($this->getServer()->getUrl());
+        $request = RequestFactory::create('GET', $this->getServer()->getUrl());
         $request->getEventManager()->attach($this->plugin);
+        $request->setClient(new Client());
         $request->send();
 
-        $request = RequestFactory::get($this->getServer()->getUrl());
+        $request = RequestFactory::create('GET', $this->getServer()->getUrl());
         $request->getEventManager()->attach($this->plugin);
+        $request->setClient(new Client());
         $request->send();
 
         $this->assertEquals('test=583551', $request->getHeader('Cookie'));

@@ -20,7 +20,7 @@ class FileCookieJar extends ArrayCookieJar
      * Create a new FileCookieJar object
      *
      * @param string $cookieFile File to store the cookie data
-     *
+     * 
      * @throws HttpException if the file cannot be found or created
      */
     public function __construct($cookieFile)
@@ -75,6 +75,6 @@ class FileCookieJar extends ArrayCookieJar
 
         fclose($handle);
         
-        $this->cookies = ($json) ? json_decode($json, true) : array();
+        $this->cookies = $json ? json_decode($json, true) : array();
     }
 }

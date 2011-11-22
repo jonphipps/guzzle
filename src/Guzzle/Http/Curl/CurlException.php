@@ -11,19 +11,19 @@ use Guzzle\Http\Message\BadResponseException;
  */
 class CurlException extends BadResponseException
 {
-    /**
-     * @var string
-     */
     private $curlError;
+    private $curlErrorNo;
 
     /**
      * Set the cURL error message
      *
      * @param string $error Curl error
+     * @param int $number Curl error number
      */
-    public function setCurlError($error)
+    public function setError($error, $number)
     {
         $this->curlError = $error;
+        $this->curlErrorNo = $number;
 
         return $this;
     }
@@ -33,8 +33,18 @@ class CurlException extends BadResponseException
      *
      * @return string
      */
-    public function getCurlError()
+    public function getError()
     {
         return $this->curlError;
+    }
+
+    /**
+     * Get the associated cURL error number
+     *
+     * @return int
+     */
+    public function getErrorNo()
+    {
+        return $this->curlErrorNo;
     }
 }

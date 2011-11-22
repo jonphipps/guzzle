@@ -2,8 +2,8 @@
 
 namespace Guzzle\Http\Plugin;
 
-use Guzzle\Common\Event\Observer;
-use Guzzle\Common\Event\Subject;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\CookieJar\CookieJarInterface;
@@ -13,7 +13,7 @@ use Guzzle\Http\CookieJar\CookieJarInterface;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class CookiePlugin implements Observer
+class CookiePlugin implements ObserverInterface
 {
     /**
      * @var CookieJarInterface
@@ -300,7 +300,7 @@ class CookiePlugin implements Observer
     /**
      * {@inheritdoc}
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         // @codeCoverageIgnoreStart
         if (!($subject instanceof RequestInterface)) {

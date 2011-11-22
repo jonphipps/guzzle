@@ -49,7 +49,7 @@ class AbstractMessageTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertTrue($this->request->hasHeader('X-Data') !== false);
         $this->assertTrue($this->request->hasHeader('A') !== false);
     }
-
+    
     /**
      * @covers Guzzle\Http\Message\AbstractMessage::getHeaders
      */

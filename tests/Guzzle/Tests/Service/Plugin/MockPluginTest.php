@@ -5,9 +5,9 @@ namespace Guzzle\Tests\Service\Plugin;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\Response;
-use Guzzle\Service\Plugin\MockPlugin;
+use Guzzle\Http\Plugin\MockPlugin;
 use Guzzle\Service\Client;
-use Guzzle\Tests\Common\Mock\MockSubject;
+use Guzzle\Tests\Mock\MockSubject;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
@@ -15,8 +15,8 @@ use Guzzle\Tests\Common\Mock\MockSubject;
 class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::__construct
-     * @covers Guzzle\Service\Plugin\MockPlugin::isTemporary
+     * @covers Guzzle\Http\Plugin\MockPlugin::__construct
+     * @covers Guzzle\Http\Plugin\MockPlugin::isTemporary
      */
     public function testCanBeTemporary()
     {
@@ -27,7 +27,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
     
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::count
+     * @covers Guzzle\Http\Plugin\MockPlugin::count
      */
     public function testIsCountable()
     {
@@ -37,7 +37,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::clearQueue
+     * @covers Guzzle\Http\Plugin\MockPlugin::clearQueue
      * @depends testIsCountable
      */
     public function testCanClearQueue()
@@ -49,7 +49,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::getQueue
+     * @covers Guzzle\Http\Plugin\MockPlugin::getQueue
      */
     public function testCanInspectQueue()
     {
@@ -62,7 +62,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::getMockFile
+     * @covers Guzzle\Http\Plugin\MockPlugin::getMockFile
      */
     public function testRetrievesResponsesFromFiles()
     {
@@ -72,7 +72,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::getMockFile
+     * @covers Guzzle\Http\Plugin\MockPlugin::getMockFile
      * @expectedException InvalidArgumentException
      */
     public function testThrowsExcpetionWhenResponseFileIsNotFound()
@@ -81,7 +81,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::addResponse
+     * @covers Guzzle\Http\Plugin\MockPlugin::addResponse
      * @expectedException InvalidArgumentException
      */
     public function testInvalidResponsesThrowAnException()
@@ -91,7 +91,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::addResponse
+     * @covers Guzzle\Http\Plugin\MockPlugin::addResponse
      */
     public function testAddsResponseObjectsToQueue()
     {
@@ -102,7 +102,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::addResponse
+     * @covers Guzzle\Http\Plugin\MockPlugin::addResponse
      */
     public function testAddsResponseFilesToQueue()
     {
@@ -112,9 +112,9 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::update
-     * @covers Guzzle\Service\Plugin\MockPlugin::addResponse
-     * @covers Guzzle\Service\Plugin\MockPlugin::dequeue
+     * @covers Guzzle\Http\Plugin\MockPlugin::update
+     * @covers Guzzle\Http\Plugin\MockPlugin::addResponse
+     * @covers Guzzle\Http\Plugin\MockPlugin::dequeue
      * @depends testAddsResponseFilesToQueue
      */
     public function testAddsMockResponseToRequestFromClient()
@@ -133,7 +133,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::update
+     * @covers Guzzle\Http\Plugin\MockPlugin::update
      * @depends testAddsResponseFilesToQueue
      */
     public function testUpdateIgnoresWhenEmpty()
@@ -143,7 +143,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::update
+     * @covers Guzzle\Http\Plugin\MockPlugin::update
      * @depends testAddsResponseFilesToQueue
      */
     public function testUpdateIgnoresOtherEvents()
@@ -154,8 +154,8 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::update
-     * @covers Guzzle\Service\Plugin\MockPlugin::dequeue
+     * @covers Guzzle\Http\Plugin\MockPlugin::update
+     * @covers Guzzle\Http\Plugin\MockPlugin::dequeue
      * @depends testAddsMockResponseToRequestFromClient
      */
     public function testDetachesTemporaryWhenEmpty()
@@ -171,7 +171,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Plugin\MockPlugin::__construct
+     * @covers Guzzle\Http\Plugin\MockPlugin::__construct
      */
     public function testLoadsResponsesFromConstructor()
     {

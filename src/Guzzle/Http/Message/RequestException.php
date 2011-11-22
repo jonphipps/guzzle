@@ -20,10 +20,14 @@ class RequestException extends HttpException
      * Set the request that caused the exception
      *
      * @param RequestInterface $request Request to set
+     *
+     * @return RequestException
      */
     public function setRequest(RequestInterface $request)
     {
         $this->request = $request;
+
+        return $this;
     }
 
     /**

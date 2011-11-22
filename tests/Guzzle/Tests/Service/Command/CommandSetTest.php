@@ -2,18 +2,19 @@
 
 namespace Guzzle\Tests\Service\Command;
 
-use Guzzle\Tests\Common\Mock\MockObserver;
-use Guzzle\Http\Pool\Pool;
+use Guzzle\Tests\Mock\MockObserver;
+use Guzzle\Http\Curl\CurlMulti;
 use Guzzle\Http\Message\Response;
 use Guzzle\Service\Command\CommandSet;
 use Guzzle\Service\Client;
 use Guzzle\Service\DescriptionBuilder\XmlDescriptionBuilder;
 use Guzzle\Service\Command\ConcreteCommandFactory;
 use Guzzle\Tests\Service\Mock\Command\MockCommand;
-use Guzzle\Service\Plugin\MockPlugin;
+use Guzzle\Http\Plugin\MockPlugin;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
+ * @covers Guzzle\Service\Command\CommandSet
  */
 class CommandSetTest extends AbstractCommandTest
 {
@@ -24,9 +25,8 @@ class CommandSetTest extends AbstractCommandTest
      */
     public function test__construct()
     {
-        $pool = new Pool();
         $cmd = new MockCommand();
-        $commandSet = new CommandSet(array($cmd), $pool);
+        $commandSet = new CommandSet(array($cmd));
         $this->assertTrue($commandSet->hasCommand($cmd));
     }
 
@@ -45,6 +45,7 @@ class CommandSetTest extends AbstractCommandTest
 
         // Check when no commands are set
         $this->assertEquals(array(), $commandSet->getSerialCommands());
+        $this->assertEquals(array(), $commandSet->getParallelCommands());
 
         // Create some mock commands
         $command1 = new MockCommand();

@@ -31,7 +31,7 @@ class EventManager
      *
      * @param Subject Subject colleague object
      */
-    public function __construct(Subject $subject)
+    public function __construct(SubjectInterface $subject)
     {
         $this->subject = $subject;
     }
@@ -48,7 +48,7 @@ class EventManager
      */
     public function attach($observer, $priority = 0)
     {
-        if (!($observer instanceof \Closure) && !($observer instanceof Observer)) {
+        if (!($observer instanceof \Closure) && !($observer instanceof ObserverInterface)) {
             throw new \InvalidArgumentException(
                 'Observer must be a Closure or Observer object'
             );
@@ -225,7 +225,7 @@ class EventManager
      */
     protected function notifyObserver($observer, $event, $context = null)
     {
-        if ($observer instanceof Observer) {
+        if ($observer instanceof ObserverInterface) {
             return $observer->update($this->subject, $event, $context);
         } else {
             return $observer($this->subject, $event, $context);

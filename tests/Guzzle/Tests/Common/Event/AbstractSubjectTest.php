@@ -2,7 +2,7 @@
 
 namespace Guzzle\Tests\Common\Event;
 
-use Guzzle\Tests\Common\Mock\MockSubject;
+use Guzzle\Tests\Mock\MockSubject;
 use Guzzle\Common\Event\EventManager;
 
 /**

@@ -7,9 +7,7 @@ use Guzzle\Common\Collection;
 /**
  * Cookie contains cookies and allows the easy access, removal, and
  * string representation of HTTP cookies that will be sent in an HTTP request.
- *
- * This class can be used to generate a Cookie Version 0 request header.
- *
+ * 
  * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Cookie extends QueryString

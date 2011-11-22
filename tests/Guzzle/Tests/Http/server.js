@@ -53,6 +53,9 @@ var GuzzleServer = function(port) {
                 that.requests = [];
                 res.writeHead(200, "OK", { "Content-Length": 0 });
                 res.end();
+                if (this.log) {
+                    console.log("Flushing requests");
+                }
             } else if (req.url == "/guzzle-server") {
                 // Shutdown the server
                 res.writeHead(200, "OK", { "Content-Length": 0, "Connection": "close" });
@@ -68,6 +71,9 @@ var GuzzleServer = function(port) {
                 var data = that.requests.join("\n----[request]\n");
                 res.writeHead(200, "OK", { "Content-Length": data.length });
                 res.end(data);
+                if (this.log) {
+                    console.log("Sending receiving requests");
+                }
             }
         } else if (req.method == "PUT") {
             if (req.url == "/guzzle-server/responses") {

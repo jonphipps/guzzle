@@ -3,8 +3,6 @@
 namespace Guzzle\Tests\Http\CookieJar;
 
 use Guzzle\Guzzle;
-use Guzzle\Http\Message\Request;
-use Guzzle\Http\Plugin\CookiePlugin;
 use Guzzle\Http\CookieJar\ArrayCookieJar;
 use Guzzle\Http\CookieJar\CookieJarInterface;
 
@@ -308,7 +306,6 @@ class ArrayCookieJarTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $this->jar->clear();
         $this->assertEquals(0, count($this->jar->getCookies()));
-        $plugin = new CookiePlugin($this->jar);
 
         $data = array(
             'cookie' => array('foo', 'bar'),

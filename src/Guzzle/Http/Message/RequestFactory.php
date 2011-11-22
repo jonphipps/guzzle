@@ -16,11 +16,6 @@ use Guzzle\Http\Url;
  * this default factory implementation will not work for your client, though
  * you can extend this class with your custom factory.
  *
- * <code>
- * $request = RequestFactory::get('http://www.google.com/');
- * $response = $request->send();
- * </code>
- *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
 class RequestFactory
@@ -34,7 +29,7 @@ class RequestFactory
         'content-length', 'content-type', 'date', 'expect', 'from', 'host',
         'if-match', 'if-modified-since', 'if-none-match', 'if-range',
         'if-unmodified-since', 'max-forwards', 'pragma', 'proxy-authorization',
-        'range', 'referer', 'te', 'upgrade', 'user-agent', 'via', 'warning'
+        'range', 'referer', 'te', 'transfer-encoding', 'upgrade', 'user-agent', 'via', 'warning'
     );
 
     /**
@@ -96,7 +91,7 @@ class RequestFactory
         }
 
         // Check if a body is present in the message
-        $body = (isset($parts[1])) ? $parts[1] : null;
+        $body = isset($parts[1]) ? $parts[1] : null;
 
         // Check for the Host header
         $host = isset($headers['Host']) ? $headers['Host'] : '';
@@ -215,6 +210,9 @@ class RequestFactory
         if ($method != 'POST' && $method != 'PUT') {
             $c = static::$requestClass;
             $request = new $c($method, $url, $headers);
+            if ($body) {
+                $request->setResponseBody(EntityBody::factory($body));
+            }
         } else {
             $c = static::$entityEnclosingRequestClass;
             $request = new $c($method, $url, $headers);
@@ -223,102 +221,13 @@ class RequestFactory
                 if ($method == 'POST' && (is_array($body) || $body instanceof Collection)) {
                     $request->addPostFields($body);
                 } else if (is_resource($body) || $body instanceof EntityBody) {
-                    $request->setBody($body);
+                    $request->setBody($body, $request->getHeader('Content-Type'));
                 } else {
-                    $request->setBody((string) $body);
+                    $request->setBody((string) $body, $request->getHeader('Content-Type'));
                 }
             }
         }
 
         return $request;
-    }
-
-    /**
-     * Create a new GET request
-     *
-     * @param string $url URL of the GET request
-     * @param array|Collection $headers (optional) HTTP headers
-     * @param string|resource|array|EntityBody $body (optional) Where to store
-     *      the response entity body
-     *
-     * @return Request
-     */
-    public static function get($url, $headers = null, $body = null)
-    {
-        $request = self::create(RequestInterface::GET, $url, $headers);
-        if ($body) {
-            $request->setResponseBody($body);
-        }
-
-        return $request;
-    }
-
-    /**
-     * Create a new HEAD request
-     *
-     * @param string $url URL of the HEAD request
-     * @param array|Collection $headers (optional) HTTP headers
-     *
-     * @return Request
-     */
-    public static function head($url, $headers = null)
-    {
-        return self::create(RequestInterface::HEAD, $url, $headers);
-    }
-
-    /**
-     * Create a new DELETE request
-     *
-     * @param string $url URL of the DELETE request
-     * @param array|Collection $headers (optional) HTTP headers
-     *
-     * @return Request
-     */
-    public static function delete($url, $headers = null)
-    {
-        return self::create(RequestInterface::DELETE, $url, $headers);
-    }
-
-    /**
-     * Create a new POST request
-     *
-     * @param string $url URL of the POST request
-     * @param array|Collection $headers (optional) HTTP headers
-     * @param array|Collection $postFields (optional) Associative array of POST
-     *      fields to send in the body of the request.  Prefix a value in the
-     *      array with the @ symbol reference a file.
-     *
-     * @return EntityEnclosingRequest
-     */
-    public static function post($url, $headers = null, $postFields = null)
-    {
-        return self::create(RequestInterface::POST, $url, $headers, $postFields);
-    }
-
-    /**
-     * Create a new PUT request
-     *
-     * @param string $url URL of the PUT request
-     * @param array|Collection $headers (optional) HTTP headers
-     * @param string|resource|array|EntityBody $body Body to send in the request
-     *
-     * @return EntityEnclosingRequest
-     */
-    public static function put($url, $headers = null, $body = null)
-    {
-        return self::create(RequestInterface::PUT, $url, $headers, $body);
-    }
-
-    /**
-     * Create a new OPTIONS request
-     *
-     * @param string $url URL of the OPTIONS request
-     * @param array|Collection $headers (optional) HTTP headers
-     *
-     * @return Request
-     */
-    public static function options($url, $headers = null, $body = null)
-    {
-        return self::create(RequestInterface::OPTIONS, $url, $headers, $body);
     }
 }

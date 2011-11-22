@@ -4,8 +4,8 @@ namespace Guzzle\Http\Plugin;
 
 use Guzzle\Guzzle;
 use Guzzle\Common\Cache\CacheAdapterInterface;
-use Guzzle\Common\Event\Observer;
-use Guzzle\Common\Event\Subject;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\EntityEnclosingRequestInterface;
 use Guzzle\Http\Message\Response;
@@ -20,7 +20,7 @@ use Guzzle\Http\Message\Request;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class CachePlugin implements Observer
+class CachePlugin implements ObserverInterface
 {
     /**
      * @var CacheAdapter Cache adapter used to write cache data to cache objects
@@ -91,28 +91,20 @@ class CachePlugin implements Observer
         // Always recalculate when using the raw option
         if (!$key || $raw) {
 
-            // Check to see if the key should be filtered
-            $filter = $request->getParams()->get('cache.key_filter');
-            // The generate the start of the key
-            $key = $request->getScheme() . '&' . $request->getHost() . $request->getPath();
+            // Generate the start of the key
+            $key = $request->getScheme() . '_' . $request->getHost() . $request->getPath();
             $filterHeaders = array('Cache-Control');
             $filterQuery = array();
 
-            if ($filter) {
-                // Parse the filter string
-                foreach (explode(';', $filter) as $part) {
-                    $pieces = array_map('trim', explode('=', $part));
-                    if (!isset($pieces[1])) {
-                        continue;
-                    }
+            // Check to see how and if the key should be filtered
+            foreach (explode(';', $request->getParams()->get('cache.key_filter')) as $part) {
+                $pieces = array_map('trim', explode('=', $part));
+                if (isset($pieces[1])) {
                     $remove = array_map('trim', explode(',', $pieces[1]));
-                    switch ($pieces[0]) {
-                        case 'header':
-                            $filterHeaders = array_merge($filterHeaders, $remove);
-                            break;
-                        case 'query':
-                            $filterQuery = array_merge($filterQuery, $remove);
-                            break;
+                    if ($pieces[0] == 'header') {
+                        $filterHeaders = array_merge($filterHeaders, $remove);
+                    } else if ($pieces[0] == 'query') {
+                        $filterQuery = array_merge($filterQuery, $remove);
                     }
                 }
             }
@@ -128,9 +120,9 @@ class CachePlugin implements Observer
             })->getAll());
 
             if ($raw) {
-                $key = 'gzrq_' . $key . $queryString . '&' . $headerString;
+                $key = strtolower('gz_' . $key . $queryString . '_' . $headerString);
             } else {
-                $key = 'gzrq_' . md5($key . $queryString . '&' . $headerString);
+                $key = strtolower('gz_' . md5($key . $queryString . '_' . $headerString));
                 $request->getParams()->set('cache.key', $key);
             }
         }
@@ -143,7 +135,7 @@ class CachePlugin implements Observer
      *
      * @param RequestInterface $subject Request to process
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         // @codeCoverageIgnoreStart
         if (!($subject instanceof RequestInterface)) {
@@ -167,7 +159,7 @@ class CachePlugin implements Observer
                 // If the cached data was found, then make the request into a
                 // manually set request
                 if ($cachedData) {
-                    
+
                     if ($this->serialize) {
                         $cachedData = unserialize($cachedData);
                     }
@@ -218,7 +210,10 @@ class CachePlugin implements Observer
     {
         $revalidate = clone $request;
         $revalidate->getEventManager()->detach($this);
-        $revalidate->setHeader('If-Modified-Since', $response->getDate());
+        $revalidate->removeHeader('Pragma')
+                   ->removeHeader('Cache-Control')
+                   ->setHeader('If-Modified-Since', $response->getDate());
+
         if ($response->getEtag()) {
             $revalidate->setHeader('If-None-Match', '"' . $response->getEtag() . '"');
         }
@@ -275,10 +270,9 @@ class CachePlugin implements Observer
         $responseAge = $response->getAge();
 
         // Check the request's max-age header against the age of the response
-        if ($request->hasCacheControlDirective('max-age')) {
-            if ($responseAge > $request->getCacheControlDirective('max-age')) {
-                return false;
-            }
+        if ($request->hasCacheControlDirective('max-age') &&
+            $responseAge > $request->getCacheControlDirective('max-age')) {
+            return false;
         }
 
         // Check the response's max-age header

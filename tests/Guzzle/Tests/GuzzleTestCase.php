@@ -5,10 +5,10 @@ namespace Guzzle\Tests;
 use Guzzle\Common\Log\Adapter\ZendLogAdapter;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Message\RequestInterface;
-use Guzzle\Service\Plugin\MockPlugin;
+use Guzzle\Http\Plugin\MockPlugin;
 use Guzzle\Service\Client;
 use Guzzle\Service\ServiceBuilder;
-use Guzzle\Tests\Common\Mock\MockFilter;
+use Guzzle\Tests\Mock\MockFilter;
 use Guzzle\Tests\Http\Server;
 use RuntimeException;
 
@@ -34,11 +34,15 @@ abstract class GuzzleTestCase extends \PHPUnit_Framework_TestCase
     public function getServer()
     {
         if (!self::$server) {
+            try {
             self::$server = new Server();
             if (self::$server->isRunning()) {
                 self::$server->flush();
             } else {
                 self::$server->start();
+            }
+            } catch (\Exception $e) {
+                fwrite(STDERR, $e->getMessage());
             }
         }
 
@@ -130,7 +134,7 @@ abstract class GuzzleTestCase extends \PHPUnit_Framework_TestCase
     {
         $this->requests = array();
         $that = $this;
-        $mock = new MockPlugin(array(), true);
+        $mock = new MockPlugin(null, true);
         $mock->getEventManager()->attach(function($subject, $event, $context) use ($that) {
             if ($event == 'mock.request') {
                 $that->addMockedRequest($context);
@@ -140,7 +144,7 @@ abstract class GuzzleTestCase extends \PHPUnit_Framework_TestCase
         foreach ((array) $paths as $path) {
             $mock->addResponse($this->getMockResponse($path));
         }
-
+        
         $client->getEventManager()->attach($mock, 9999);
     }
 

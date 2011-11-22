@@ -5,8 +5,7 @@ namespace Guzzle\Http\Message;
 use Guzzle\Common\Collection;
 
 /**
- * HTTP messages consist of request messages that request data from a server,
- * and response messages that carry back data from the server to the client.
+ * Request and response message interface
  * 
  * @author Michael Dowling <michael@guzzlephp.org>
  */

@@ -109,8 +109,8 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
         // Check the complete request
         $this->assertEquals(
             "HEAD /key HTTP/1.1\r\n" .
-            "User-Agent: " . Guzzle::getDefaultUserAgent() . "\r\n" .
             "Host: www.example.com\r\n" .
+            "User-Agent: " . Guzzle::getDefaultUserAgent() . "\r\n" .
             "\r\n", (string) $request);
 
         // Make sure the concrete command class is used
@@ -148,11 +148,11 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
 
         $this->assertEquals(
             "PUT /?test=abc&i=test HTTP/1.1\r\n" .
-            "User-Agent: " . Guzzle::getDefaultUserAgent() . "\r\n" .
             "Host: www.tazmania.com\r\n" .
-            "X-Custom: haha\r\n" .
-            "Content-Length: 29\r\n" .
+            "User-Agent: " . Guzzle::getDefaultUserAgent() . "\r\n" .
             "Expect: 100-Continue\r\n" .
+            "Content-Length: 29\r\n" .
+            "X-Custom: haha\r\n" .
             "\r\n" .
             "begin_body::my-data::end_body", (string) $request);
 
@@ -170,11 +170,11 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
         
         $this->assertEquals(
             "PUT /?test=abc&i=test HTTP/1.1\r\n" .
-            "User-Agent: " . Guzzle::getDefaultUserAgent() . "\r\n" .
             "Host: www.tazmania.com\r\n" .
-            "X-Custom: haha\r\n" .
-            "Content-Length: 29\r\n" .
+            "User-Agent: " . Guzzle::getDefaultUserAgent() . "\r\n" .
             "Expect: 100-Continue\r\n" .
+            "Content-Length: 29\r\n" .
+            "X-Custom: haha\r\n" .
             "\r\n" .
             "begin_body::my-data::end_body", (string) $request);
     }

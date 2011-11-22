@@ -2,7 +2,7 @@
 
 namespace Guzzle\Tests\Service\Mock;
 
-use Guzzle\Common\Inspector;
+use Guzzle\Service\Inspector;
 use Guzzle\Service\Client;
 
 /**

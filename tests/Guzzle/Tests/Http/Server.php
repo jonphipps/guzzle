@@ -7,6 +7,7 @@ use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\RequestFactory;
+use Guzzle\Service\Client;
 
 /**
  * The Server class is used to control a scripted webserver using node.js that
@@ -40,6 +41,11 @@ class Server
     private $running = false;
 
     /**
+     * @var Client
+     */
+    private $client;
+
+    /**
      * Create a new scripted server
      *
      * @param int $port (optional) Port to listen on (defaults to 8124)
@@ -47,6 +53,7 @@ class Server
     public function __construct($port = null)
     {
         $this->port = $port ?: self::DEFAULT_PORT;
+        $this->client = new Client($this->getUrl());
     }
 
     /**
@@ -77,7 +84,7 @@ class Server
             return false;
         }
         
-        return RequestFactory::delete($this->getUrl() . 'guzzle-server/requests')
+        return $this->client->delete('guzzle-server/requests')
             ->send()->getStatusCode() == 200;
     }
 
@@ -114,9 +121,9 @@ class Server
             );
         }
 
-        $response = RequestFactory::put($this->getUrl() . 'guzzle-server/responses', null, json_encode($data))
-            ->send();
-
+        $request = $this->client->put('guzzle-server/responses', null, json_encode($data));
+        $response = $request->send();
+        
         return $response->getStatusCode() == 200;
     }
 
@@ -175,7 +182,7 @@ class Server
         $data = array();
 
         if ($this->isRunning()) {
-            $response = RequestFactory::get($this->getUrl() . 'guzzle-server/requests')->send();
+            $response = $this->client->get('guzzle-server/requests')->send();
             $data = array_filter(explode(self::REQUEST_DELIMITER, $response->getBody(true)));
             if ($hydrate) {
                 $data = array_map(function($message) {
@@ -227,7 +234,7 @@ class Server
 
         $this->running = false;
         
-        return RequestFactory::delete($this->getUrl() . 'guzzle-server')->send()
+        return $this->client->delete('guzzle-server')->send()
             ->getStatusCode() == 200;
     }
 }

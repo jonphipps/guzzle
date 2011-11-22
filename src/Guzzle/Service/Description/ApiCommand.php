@@ -3,7 +3,7 @@
 namespace Guzzle\Service\Description;
 
 use Guzzle\Common\Collection;
-use Guzzle\Common\Inspector;
+use Guzzle\Service\Inspector;
 
 /**
  * Data object holding the information of an API command

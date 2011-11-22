@@ -3,8 +3,9 @@
 namespace Guzzle\Http\Plugin;
 
 use Guzzle\Common\Log\LogAdapterInterface;
-use Guzzle\Common\Event\Observer;
-use Guzzle\Common\Event\Subject;
+use Guzzle\Common\Event\ObserverInterface;
+use Guzzle\Common\Event\SubjectInterface;
+use Guzzle\Http\Curl\CurlHandle;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\Message\EntityEnclosingRequestInterface;
 use Guzzle\Http\Message\RequestInterface;
@@ -30,7 +31,7 @@ use Guzzle\Http\Message\Response;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class LogPlugin implements Observer
+class LogPlugin implements ObserverInterface
 {
     // Bitwise log settings
     const LOG_CONTEXT = 1;
@@ -95,7 +96,7 @@ class LogPlugin implements Observer
     /**
      * {@inheritdoc}
      */
-    public function update(Subject $subject, $event, $context = null)
+    public function update(SubjectInterface $subject, $event, $context = null)
     {
         // @codeCoverageIgnoreStart
         if (!($subject instanceof RequestInterface)) {
@@ -126,18 +127,18 @@ class LogPlugin implements Observer
                             // The body of the request cannot be recalled so
                             // logging the content of the request will need to
                             // be streamed using updates
-                            $subject->getParams()->set('request_wire', EntityBody::factory(''));
+                            $subject->getParams()->set('request_wire', EntityBody::factory());
                         }
                     }
                     if (!$subject->isResponseBodyRepeatable()) {
                         // The body of the response cannot be recalled so
                         // logging the content of the response will need to
                         // be streamed using updates
-                        $subject->getParams()->set('response_wire', EntityBody::factory(''));
+                        $subject->getParams()->set('response_wire', EntityBody::factory());
                     }
                 }
                 break;
-            case 'request.curl.release':
+            case 'request.complete':
                 // Triggers the actual log write
                 $this->log($subject, $subject->getResponse());
                 break;
@@ -175,7 +176,7 @@ class LogPlugin implements Observer
         }
 
         // Check if we are logging anything that will come from cURL
-        if ($request->getCurlHandle() && ($this->settings & self::LOG_DEBUG || $this->settings & self::LOG_HEADERS || $this->settings & self::LOG_BODY)) {
+        if ($request->getParams()->get('curl_handle') && ($this->settings & self::LOG_DEBUG || $this->settings & self::LOG_HEADERS || $this->settings & self::LOG_BODY)) {
 
             // If context logging too, then add a new line for cleaner messages
             if ($this->settings & self::LOG_CONTEXT) {
@@ -183,24 +184,27 @@ class LogPlugin implements Observer
             }
 
             // Filter cURL's verbose output based on config settings
-            $stderr = $request->getCurlHandle()->getStderr(true);
-            rewind($stderr);
-            $addedBody = false;
-            while ($line = fgets($stderr)) {
-                $first = $line[0];
-                // * - Debug | < - Downstream | > - Upstream
-                if ($line[0] == '*' && $this->settings & self::LOG_DEBUG) {
-                    $message .= $line;
-                } else if ($this->settings & self::LOG_HEADERS) {
-                    $message .= $line;
-                }
-                // Add the request body if needed
-                if ($this->settings & self::LOG_BODY) {
-                    if (trim($line) == '' && !$addedBody && $request instanceof EntityEnclosingRequestInterface) {
-                        $message .= $request->getParams()->get('request_wire')
-                            ? (string) $request->getParams()->get('request_wire') . "\r\n"
-                            : (string) $request->getBody() . "\r\n";
-                        $addedBody = true;
+            $handle = $request->getParams()->get('curl_handle');
+            if ($handle instanceof CurlHandle) {
+                $stderr = $handle->getStderr(true);
+                rewind($stderr);
+                $addedBody = false;
+                while ($line = fgets($stderr)) {
+                    $first = $line[0];
+                    // * - Debug | < - Downstream | > - Upstream
+                    if ($line[0] == '*' && $this->settings & self::LOG_DEBUG) {
+                        $message .= $line;
+                    } else if ($this->settings & self::LOG_HEADERS) {
+                        $message .= $line;
+                    }
+                    // Add the request body if needed
+                    if ($this->settings & self::LOG_BODY) {
+                        if (trim($line) == '' && !$addedBody && $request instanceof EntityEnclosingRequestInterface) {
+                            $message .= $request->getParams()->get('request_wire')
+                                ? (string) $request->getParams()->get('request_wire') . "\r\n"
+                                : (string) $request->getBody() . "\r\n";
+                            $addedBody = true;
+                        }
                     }
                 }
             }

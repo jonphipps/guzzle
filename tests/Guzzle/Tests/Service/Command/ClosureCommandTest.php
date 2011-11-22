@@ -57,7 +57,7 @@ class ClosureCommandTest extends \Guzzle\Tests\GuzzleTestCase
         $c = new ClosureCommand(array(
             'closure' => function($command, $api) {
                 $command->set('testing', '123');
-                $request = RequestFactory::get('http://www.test.com/');
+                $request = RequestFactory::create('GET', 'http://www.test.com/');
                 return $request;
             },
             'closure_api' => true

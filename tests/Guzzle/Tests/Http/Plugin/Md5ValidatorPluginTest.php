@@ -18,7 +18,7 @@ class Md5ValidatorPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testValidatesMd5()
     {
         $plugin = new Md5ValidatorPlugin();
-        $request = RequestFactory::get('http://www.test.com/');
+        $request = RequestFactory::create('GET', 'http://www.test.com/');
         $request->getEventManager()->attach($plugin);
 
         $body = 'abc';
@@ -42,7 +42,7 @@ class Md5ValidatorPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testThrowsExceptionOnInvalidMd5()
     {
         $plugin = new Md5ValidatorPlugin();
-        $request = RequestFactory::get('http://www.test.com/');
+        $request = RequestFactory::create('GET', 'http://www.test.com/');
         $request->getEventManager()->attach($plugin);
 
         $request->getEventManager()->notify('request.complete',
@@ -59,7 +59,7 @@ class Md5ValidatorPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testSkipsWhenContentLengthIsTooLarge()
     {
         $plugin = new Md5ValidatorPlugin(false, 1);
-        $request = RequestFactory::get('http://www.test.com/');
+        $request = RequestFactory::create('GET', 'http://www.test.com/');
         $request->getEventManager()->attach($plugin);
 
         $request->getEventManager()->notify('request.complete',
@@ -76,7 +76,7 @@ class Md5ValidatorPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testProperlyValidatesWhenUsingContentEncoding()
     {
         $plugin = new Md5ValidatorPlugin(true);
-        $request = RequestFactory::get('http://www.test.com/');
+        $request = RequestFactory::create('GET', 'http://www.test.com/');
         $request->getEventManager()->attach($plugin);
 
         // Content-MD5 is the MD5 hash of the canonical content after all
