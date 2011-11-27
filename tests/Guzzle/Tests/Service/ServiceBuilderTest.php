@@ -136,19 +136,14 @@ EOT;
     {
         $cache = new ArrayCache();
         $adapter = new DoctrineCacheAdapter($cache);
-        $this->assertEmpty($cache->getIds());
-
         $s1 = ServiceBuilder::factory($this->tempFile, $adapter, 86400, 'xml');
 
         // Make sure it added to the cache with a proper cache key
-        $keys = $cache->getIds();
-        $this->assertNotEmpty($keys);
-        $this->assertEquals(0, strpos($keys[0], 'guz_'));
-        $this->assertFalse(strpos($keys[0], '__'));
-
+        $key = str_replace('__', '_', 'guz_' . preg_replace('~[^\\pL\d]+~u', '_', strtolower(realpath($this->tempFile))));
+        $this->assertTrue($cache->contains($key));
+        
         // Load this one from cache
         $s2 = ServiceBuilder::factory($this->tempFile, $adapter, 86400, 'xml');
-
         $builder = ServiceBuilder::factory($this->tempFile, null, 86400, 'xml');
         $this->assertEquals($s1, $s2);
     }

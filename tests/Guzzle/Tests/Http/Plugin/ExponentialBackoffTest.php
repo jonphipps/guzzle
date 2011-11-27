@@ -95,7 +95,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
             "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n",
             "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n"
         ));
-
+        
         $plugin = new ExponentialBackoffPlugin(2, null, array($this, 'delayClosure'));
         $client = new Client($this->getServer()->getUrl());
         $client->getEventManager()->attach($plugin);

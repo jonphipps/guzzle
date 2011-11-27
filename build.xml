@@ -2,17 +2,10 @@
 
 <project name="guzzle" default="init">
 
-    <target name="init-git" description="Initialize git submodules">
-        <echo msg="Initializing git submodules" />
-        <exec command="git submodule update --init" dir="./.." />
+    <target name="vendors" description="Initialize vendors">
+        <echo msg="Initializing vendors" />
+        <exec command="git submodule update --init" />
     </target>
-
-    <target name="init-test" description="Initialize for unit testing">
-        <echo msg="Copying ./phpunit.xml.dist to ./phpunit.xml" />
-        <copy file="../phpunit.xml.dist" tofile="../phpunit.xml" />
-    </target>
-
-    <target name="init" depends="init-git,init-test" />
 
     <target name="phar" description="Create a phar with an autoloader">
         <if>
@@ -20,10 +13,10 @@
             <then>
                 <pharpackage
                     destfile="./guzzle-na.phar"
-                    basedir="../src"
+                    basedir="./src"
                     alias="Guzzle"
                     signature="sha1">
-                    <fileset dir="../src">
+                    <fileset dir="./src">
                         <include name="**/*.php" />
                         <exclude name="**/Tests/**" />
                     </fileset>
@@ -35,11 +28,11 @@
             <else>
                 <pharpackage
                     destfile="./guzzle.phar"
-                    basedir="../src"
+                    basedir="./src"
                     stub="./autoload.php"
                     alias="Guzzle"
                     signature="sha1">
-                    <fileset dir="../src">
+                    <fileset dir="./src">
                         <include name="**/*.php" />
                         <exclude name="**/Tests/**" />
                     </fileset>

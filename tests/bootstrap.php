@@ -12,9 +12,9 @@ $classLoader->registerNamespaces(array(
     'Guzzle\Tests' => __DIR__,
     'Guzzle' => __DIR__ . '/../src',
     'Doctrine' => __DIR__ . '/../vendor/Doctrine/lib',
-    'Monolog' => __DIR__ . '/../vendor/Monolog/src'
+    'Monolog' => __DIR__ . '/../vendor/Monolog/src',
+    'Zend' => __DIR__ . '/../vendor'
 ));
-$classLoader->registerPrefix('Zend_',  __DIR__ . '/../vendor');
 $classLoader->register();
 
 $servicesFile = __DIR__ . '/Guzzle/Tests/TestData/services.xml';

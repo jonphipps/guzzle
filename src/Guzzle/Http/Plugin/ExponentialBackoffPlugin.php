@@ -138,7 +138,7 @@ class ExponentialBackoffPlugin implements ObserverInterface
                     if (time() >= $delay) {
                         // Remove the request from the pool and then add it back again
                         $context->remove($subject);
-                        $context->add($subject);
+                        $context->add($subject, true);
                         $subject->getParams()->remove(self::DELAY_PARAM);
                         return true;
                     }

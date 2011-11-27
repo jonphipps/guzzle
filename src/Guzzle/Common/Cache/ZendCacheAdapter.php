@@ -2,10 +2,11 @@
 
 namespace Guzzle\Common\Cache;
 
+use Zend\Cache\Backend;
+
 /**
- * Zend Framework 1.x cache adapter
+ * ZF1 / ZF2 cache adapter
  *
- * @link   http://www.doctrine-project.org/
  * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ZendCacheAdapter extends AbstractCacheAdapter
@@ -13,10 +14,14 @@ class ZendCacheAdapter extends AbstractCacheAdapter
     /**
      * Constructor
      *
-     * @param Zend_Cache_Backend $cacheObject Object to wrap and adapt
+     * @param Backend $cacheObject Object to wrap and adapt
      */
-    public function __construct(\Zend_Cache_Backend $cache)
+    public function __construct($cache)
     {
+        if (!($cache instanceof Backend) && !($cache instanceof \Zend_Cache_Backend)) {
+            throw new \InvalidArgumentException('$cache must be an instance of '
+                . 'Zend\\Log\\Backend or Zend_Cache_Backend');
+        }
         $this->cache = $cache;
     }
 

@@ -82,10 +82,12 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
     {
         $multi = new CurlMulti();
         $multi->getEventManager()->attach($this);
-        $request1 = $multi->add(new Request('GET', 'http://www.google.com/'));
+        $request1 = new Request('GET', 'http://www.google.com/');
+        $multi->add($request1);
         $this->assertEquals(array($request1), $multi->all());
 
-        $request2 = $multi->add(new Request('POST', 'http://www.google.com/'));
+        $request2 = new Request('POST', 'http://www.google.com/');
+        $multi->add($request2);
         $this->assertEquals(array($request1, $request2), $multi->all());
         $this->assertEquals(2, count($multi));
 
@@ -101,10 +103,12 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
      */
     public function testRequestsCanBeRemoved()
     {
-        $request1 = $this->multi->add(new Request('GET', 'http://www.google.com/'));
-        $request2 = $this->multi->add(new Request('PUT', 'http://www.google.com/'));
+        $request1 = new Request('GET', 'http://www.google.com/');
+        $this->multi->add($request1);
+        $request2 = new Request('PUT', 'http://www.google.com/');
+        $this->multi->add($request2);
         $this->assertEquals(array($request1, $request2), $this->multi->all());
-        $this->assertEquals($request1, $this->multi->remove($request1));
+        $this->assertSame($this->multi, $this->multi->remove($request1));
         $this->assertEquals(array($request2), $this->multi->all());
     }
 
@@ -113,13 +117,11 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
      */
     public function testsResetRemovesRequestsAndResetsState()
     {
-        $request1 = $this->multi->add(new Request('GET', 'http://www.google.com/'));
+        $request1 = new Request('GET', 'http://www.google.com/');
+        $this->multi->add($request1);
         $this->multi->reset();
         $this->assertEquals(array(), $this->multi->all());
         $this->assertEquals('idle', $this->multi->getState());
-
-        // Make sure the notification came through
-        $this->assertEquals(array('reset', null), $this->updates->get('reset'));
     }
 
     /**
@@ -130,7 +132,8 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
     {
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nBody");
         $this->assertEquals('idle', $this->multi->getState());
-        $request = $this->multi->add(new Request('GET', $this->getServer()->getUrl()));
+        $request = new Request('GET', $this->getServer()->getUrl());
+        $this->multi->add($request);
         $this->multi->send();
 
         $this->assertEquals('idle', $this->multi->getState());
@@ -140,12 +143,12 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         $this->assertTrue($this->updates->hasKey(CurlMulti::COMPLETE) !== false);
 
         $this->assertEquals(array('add_request', $request), $this->updates->get(CurlMulti::ADD_REQUEST));
-        $this->assertEquals(array('complete', array($request)), $this->updates->get(CurlMulti::COMPLETE));
+        $this->assertEquals(array('complete', null), $this->updates->get(CurlMulti::COMPLETE));
         
         $this->assertEquals('Body', $request->getResponse()->getBody()->__toString());
 
-        // Sending it again will return false because there are no requests
-        $this->assertFalse($this->multi->send());
+        // Sending it again will not do anything because there are no requests
+        $this->multi->send();
     }
 
     /**
@@ -171,9 +174,9 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         $request2 = new Request('GET', $this->getServer()->getUrl());
         $request2->getEventManager()->attach($this);
         
-        $this->assertSame($request1, $this->multi->add($request1));
-        $this->assertSame($request2, $this->multi->add($request2));
-        $this->assertTrue($this->multi->send());
+        $this->multi->add($request1);
+        $this->multi->add($request2);
+        $this->multi->send();
 
         $response1 = $request1->getResponse();
         $response2 = $request2->getResponse();
@@ -297,16 +300,70 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
     public function testRemovesQueuedRequestsAddedInTransit()
     {
         $this->getServer()->flush();
-        $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
+        $this->getServer()->enqueue(array(
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"
+        ));
         $client = new Client($this->getServer()->getUrl());
         $r = $client->get();
-        $r->getEventManager()->attach(function() use ($client) {
-            // Create a request using a queued response
-            $client->get()->setResponse(new Response(200), true)->send();
+        $r->getEventManager()->attach(function($subject, $event) use ($client) {
+            if ($event == 'request.receive.status_line') {
+                // Create a request using a queued response
+                $request = $client->get()->setResponse(new Response(200), true);
+                $request->send();
+            }
         });
 
         $r->send();
         $this->assertEquals(1, count($this->getServer()->getReceivedRequests(false)));
+    }
+    
+    /**
+     * @covers Guzzle\Http\Curl\CurlMulti
+     */
+    public function testProperlyBlocksBasedOnRequestsInScope()
+    {
+        $this->getServer()->flush();
+        $this->getServer()->enqueue(array(
+            "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\ntest1",
+            "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\ntest2",
+            "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\ntest3",
+            "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\ntest4",
+            "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\ntest5",
+            "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\ntest6",
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n",
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"
+        ));
+        
+        $client = new Client($this->getServer()->getUrl());
+        
+        $requests = array(
+            $client->get(),
+            $client->get(),
+            $client->get()
+        );
+        
+        $callback = function($subject, $event) use ($client) {
+            if ($event == 'request.complete') {
+                $client->getConfig()->set('called', $client->getConfig('called') + 1);
+                $request = $client->get();
+                if ($client->getConfig('called') <= 2) {
+                    $request->getEventManager()->attach(function($s, $e) use ($client) {
+                        if ($e == 'request.complete') {
+                            $client->head()->send();
+                        }
+                    });
+                }
+                $request->send();
+            }
+        };
+        
+        $requests[0]->getEventManager()->attach($callback);
+        $requests[1]->getEventManager()->attach($callback);
+        $requests[2]->getEventManager()->attach($callback);
+        
+        $client->send($requests);
+        
+        $this->assertEquals(8, count($this->getServer()->getReceivedRequests(false)));
     }
 
     /**

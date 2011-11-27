@@ -2,24 +2,26 @@
 
 namespace Guzzle\Common\Log;
 
+use Zend\Log\Logger;
+
 /**
- * Adapts the Zend_Log class to the Guzzle framework
+ * Adapts a ZF2 Logger object
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ZendLogAdapter extends AbstractLogAdapter
 {
     /**
-     * Adapt a Zend_Log object
+     * Adapt a ZF2 logger
      * 
-     * @param Zend_Log $logObject Log object to adapt
+     * @param Logger $logObject Log object to adapt
      * @throws InvalidArgumentException
      */
     public function __construct($logObject) 
     {
-        if (!($logObject instanceof \Zend_Log)) {
+        if (!($logObject instanceof Logger)) {
             throw new \InvalidArgumentException(
-                'Object must be an instance of Zend_Log'
+                'Object must be an instance of Zend\\Log\\Logger'
             );
         }
 

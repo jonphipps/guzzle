@@ -21,7 +21,6 @@ interface CurlMultiInterface extends SubjectInterface, \Countable
     const COMPLETE = 'complete';
     const ADD_REQUEST = 'add_request';
     const REMOVE_REQUEST = 'remove_request';
-    const RESET = 'reset';
 
     const STATE_IDLE = 'idle';
     const STATE_SENDING = 'sending';
@@ -31,6 +30,8 @@ interface CurlMultiInterface extends SubjectInterface, \Countable
      * Add a request to the pool.
      *
      * @param RequestInterface $request Returns the Request that was added
+     *
+     * @return CurlMultiInterface
      */
     function add(RequestInterface $request);
 
@@ -53,7 +54,7 @@ interface CurlMultiInterface extends SubjectInterface, \Countable
      *
      * @param RequestInterface $request Request to detach.
      *
-     * @return RequestInterface Returns the Request object that was removed
+     * @return CurlMultiInterface
      */
     function remove(RequestInterface $request);
 

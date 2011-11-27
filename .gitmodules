@@ -7,3 +7,9 @@
 [submodule "vendor/Monolog"]
 	path = vendor/Monolog
 	url = https://github.com/Seldaek/monolog.git
+[submodule "vendor/Zend/Log"]
+	path = vendor/Zend/Log
+	url = https://github.com/knplabs/zend-log.git
+[submodule "vendor/Zend/Cache"]
+	path = vendor/Zend/Cache
+	url = https://github.com/knplabs/zend-cache.git

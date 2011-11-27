@@ -1,9 +1,6 @@
 <?php
 /**
  * Autoloader stub for guzzle.phar to autoload Guzzle\* classes.
- *
- * Note: this autoloader does not load other PSR-0 libraries.  If you need to
- * autoload other libraries, we recommend the Symfony ClassLoader component.
  */
 
 spl_autoload_register(function($class) {

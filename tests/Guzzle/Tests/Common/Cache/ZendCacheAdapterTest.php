@@ -3,6 +3,7 @@
 namespace Guzzle\Tests\Common\Cache;
 
 use Guzzle\Common\Cache\ZendCacheAdapter;
+use Zend\Cache\Backend\TestBackend;
 
 /**
  * CacheAdapter test case
@@ -12,7 +13,7 @@ use Guzzle\Common\Cache\ZendCacheAdapter;
 class ZendCacheAdapterTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
-     * @var \Doctrine\Common\Cache\ArrayCache
+     * @var StaticBackend
      */
     private $cache;
 
@@ -27,7 +28,7 @@ class ZendCacheAdapterTest extends \Guzzle\Tests\GuzzleTestCase
     protected function setUp()
     {
         parent::setUp();
-        $this->cache = new \Zend_Cache_Backend_Test();
+        $this->cache = new TestBackend();
         $this->adapter = new ZendCacheAdapter($this->cache);
     }
 
@@ -39,6 +40,15 @@ class ZendCacheAdapterTest extends \Guzzle\Tests\GuzzleTestCase
         $this->adapter = null;
         $this->cache = null;
         parent::tearDown();
+    }
+
+    /**
+     * @covers Guzzle\Common\Cache\ZendCacheAdapter
+     * @expectedException InvalidArgumentException
+     */
+    public function testEnforcesType()
+    {
+        $adapter = new ZendCacheAdapter('fud');
     }
 
     /**

@@ -64,23 +64,16 @@ class Guzzle
     public static function getCurlInfo($type = null)
     {
         if (!self::$curl) {
-            self::$curl = @curl_version();
-            // @codeCoverageIgnoreStart
-            if (!self::$curl) {
-                throw new \RuntimeException('Guzzle requires curl');
-            }
-            // @codeCoverageIgnoreEnd
+            self::$curl = curl_version();
             // Check if CURLOPT_FOLLOWLOCATION is available
             self::$curl['follow_location'] = !ini_get('open_basedir');
         }
         
         if (!$type) {
             return self::$curl;
-        } else if (isset(self::$curl[$type])) {
-            return self::$curl[$type];
-        } else {
-            return false;
         }
+        
+        return isset(self::$curl[$type]) ? self::$curl[$type] : false;
     }
     
     /**
