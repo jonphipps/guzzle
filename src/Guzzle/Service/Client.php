@@ -6,8 +6,6 @@ use Guzzle\Guzzle;
 use Guzzle\Service\Inflector;
 use Guzzle\Service\Inspector;
 use Guzzle\Common\Collection;
-use Guzzle\Common\Event\ObserverInterface;
-use Guzzle\Common\Event\AbstractSubject;
 use Guzzle\Common\NullObject;
 use Guzzle\Http\Client as HttpClient;
 use Guzzle\Http\Url;
@@ -24,14 +22,6 @@ use Guzzle\Service\Description\ServiceDescription;
 
 /**
  * Client object for executing commands on a web service.
- *
- * Signals emitted:
- *
- *  event                   context           description
- *  -----                   -------           -----------
- *  command.before_send     CommandInterface  A command is about to execute
- *  command.after_send      CommandInterface  A command executed
- *  command.create          CommandInterface  A command was created
  *
  * @author  michael@guzzlephp.org
  */
@@ -58,6 +48,18 @@ class Client extends HttpClient implements ClientInterface
     public static function factory($config)
     {
         return new self($config['base_url'], $config);
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public static function getAllEvents()
+    {
+        return array_merge(HttpClient::getAllEvents(), array(
+            'client.command.create',
+            'command.before_send', 
+            'command.after_send'
+        ));
     }
     
     /**
@@ -106,8 +108,11 @@ class Client extends HttpClient implements ClientInterface
         }
 
         $command->setClient($this);
-        $this->getEventManager()->notify('command.create', $command);
-
+        $this->dispatch('client.command.create', array(
+            'client'  => $this,
+            'command' => $command
+        ));
+        
         return $command;
     }
 
@@ -127,9 +132,13 @@ class Client extends HttpClient implements ClientInterface
     {
         if ($command instanceof CommandInterface) {
             $command->setClient($this)->prepare();
-            $this->getEventManager()->notify('command.before_send', $command);
+            $this->dispatch('command.before_send', array(
+                'command' => $command
+            ));
             $command->getRequest()->send();
-            $this->getEventManager()->notify('command.after_send', $command);
+            $this->dispatch('command.after_send', array(
+                'command' => $command
+            ));
             return $command->getResult();
         } else if ($command instanceof CommandSet) {
             foreach ($command as $c) {

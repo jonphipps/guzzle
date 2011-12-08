@@ -1,13 +1,13 @@
 <?php
 
-namespace Guzzle\Tests\Service\Plugin;
+namespace Guzzle\Tests\Http\Plugin;
 
+use Guzzle\Common\Event;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Plugin\MockPlugin;
-use Guzzle\Service\Client;
-use Guzzle\Tests\Mock\MockSubject;
+use Guzzle\Http\Client;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
@@ -124,7 +124,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $p->addResponse($response);
 
         $client = new Client('http://localhost:123/');
-        $client->getEventManager()->attach($p, 9999);
+        $client->getEventDispatcher()->addSubscriber($p, 9999);
         $request = $client->get();
         $request->send();
 
@@ -139,18 +139,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testUpdateIgnoresWhenEmpty()
     {
         $p = new MockPlugin();
-        $p->update(new MockSubject(), 'request.create');
-    }
-
-    /**
-     * @covers Guzzle\Http\Plugin\MockPlugin::update
-     * @depends testAddsResponseFilesToQueue
-     */
-    public function testUpdateIgnoresOtherEvents()
-    {
-        $p = new MockPlugin();
-        $p->addResponse(MockPlugin::getMockFile(__DIR__ . '/../../TestData/mock_response'));
-        $p->update(new MockSubject(), 'foobar');
+        $p->onRequestCreate(new Event());
     }
 
     /**
@@ -163,11 +152,11 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $p = new MockPlugin(null, true);
         $p->addResponse(MockPlugin::getMockFile(__DIR__ . '/../../TestData/mock_response'));
         $client = new Client('http://localhost:123/');
-        $client->getEventManager()->attach($p, 9999);
+        $client->getEventDispatcher()->addSubscriber($p, 9999);
         $request = $client->get();
         $request->send();
-
-        $this->assertFalse($client->getEventManager()->hasObserver($p));
+        
+        $this->assertFalse($this->hasSubscriber($client, $p));
     }
 
     /**

@@ -3,9 +3,8 @@
 namespace Guzzle\Http\Message;
 
 use Guzzle\Guzzle;
+use Guzzle\Common\Event;
 use Guzzle\Common\Collection;
-use Guzzle\Common\Event\EventManager;
-use Guzzle\Common\Event\ObserverInterface;
 use Guzzle\Http\ClientInterface;
 use Guzzle\Http\CurlException;
 use Guzzle\Http\QueryString;
@@ -13,28 +12,21 @@ use Guzzle\Http\Cookie;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\Url;
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+
 /**
  * HTTP request class to send requests
- *
- * Signals emitted:
- * 
- *  event                       context           description
- *  -----                       -------           -----------
- *  request.before_send         null              About to send the request
- *  request.sent                null              Sent the request
- *  request.complete            Response          Completed HTTP transaction
- *  request.exception           RequestException  Encountered an exception sending
- *  request.failure             BadResponseException The request failed
- *  request.success             Response          The request succeeded
- *  request.receive.status_line array             Received response status line
- *  request.receive.header      array             Received response header
- *  request.bad_response        null              Received non-success response
- *  request.set_response        Response          Manually set a response
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Request extends AbstractMessage implements RequestInterface
 {
+    /**
+     * @var EventDispatcherInterface
+     */
+    protected $eventDispatcher;
+    
     /**
      * @var Url HTTP Url
      */
@@ -49,11 +41,6 @@ class Request extends AbstractMessage implements RequestInterface
      * @var ClientInterface
      */
     protected $client;
-
-    /**
-     * @var EventManager Subject mediator
-     */
-    protected $eventManager;
 
     /**
      * @var Response Response of the request
@@ -94,6 +81,35 @@ class Request extends AbstractMessage implements RequestInterface
      * @var Collection cURL specific transfer options
      */
     protected $curlOptions;
+    
+    /**
+     * {@inheritdoc} 
+     */
+    public static function getAllEvents()
+    {
+        return array(
+            'curl.callback.read',
+            'curl.callback.write',
+            'curl.callback.progress',
+            // About to send the request
+            'request.before_send',
+            // Sent the request
+            'request.sent',
+            // Completed HTTP transaction
+            'request.complete',
+            'request.exception',
+            'request.failure',
+            'request.success',
+            // Received response status line
+            'request.receive.status_line',
+            // Received response header
+            'request.receive.header',
+            // Received non-success response
+            'request.bad_response',
+            // Manually set a response
+            'request.set_response'
+        );
+    }
 
     /**
      * Create a new request
@@ -124,7 +140,6 @@ class Request extends AbstractMessage implements RequestInterface
         }
 
         $this->cookie = Cookie::factory($this->getHeader('Cookie'));
-        $this->eventManager = new EventManager($this);
         $this->onComplete = array(__CLASS__, 'onComplete');
         $this->setState(self::STATE_NEW);
     }
@@ -134,11 +149,9 @@ class Request extends AbstractMessage implements RequestInterface
      */
     public function __clone()
     {
-        $eventManager = new EventManager($this);
-        foreach ($this->eventManager->getAttached() as $o) {
-            $eventManager->attach($o, $this->eventManager->getPriority($o));
+        if ($this->eventDispatcher) {
+            $this->eventDispatcher = clone $this->eventDispatcher;
         }
-        $this->eventManager = $eventManager;
         $this->curlOptions = clone $this->curlOptions;
         $this->params = clone $this->params;
         $this->url = clone $this->url;
@@ -186,11 +199,17 @@ class Request extends AbstractMessage implements RequestInterface
             })));
             $e->setResponse($response);
             $e->setRequest($request);
-            $request->getEventManager()->notify('request.failure', $e);
+            $request->dispatch('request.failure', array(
+                'request'   => $request,
+                'exception' => $e
+            ));
             throw $e;
         }
 
-        $request->getEventManager()->notify('request.success', $response);
+        $request->dispatch('request.success', array(
+            'request'  => $request,
+            'response' => $response
+        ));
     }
 
     /**
@@ -267,17 +286,7 @@ class Request extends AbstractMessage implements RequestInterface
 
         return $this;
     }
-
-    /**
-     * Get the EventManager of the request
-     *
-     * @return EventManager
-     */
-    public function getEventManager()
-    {
-        return $this->eventManager;
-    }
-
+   
     /**
      * Send the request
      *
@@ -614,18 +623,18 @@ class Request extends AbstractMessage implements RequestInterface
             list($dummy, $code, $status) = explode(' ', str_replace("\r\n", '', $data), 3);
             $this->response = new Response($code, null, $this->getResponseBody());
             $this->response->setStatus($code, $status)->setRequest($this);
-            $this->getEventManager()->notify('request.receive.status_line', array(
+            $this->dispatch('request.receive.status_line', array(
                 'line' => $data,
                 'status_code' => $code,
                 'reason_phrase' => $status,
                 'previous_response' => $previousResponse
-            ), true);
+            ));
         } else if ($length > 2) {
             list($header, $value) = array_map('trim', explode(':', trim($data), 2));
             $this->response->addHeaders(array(
                 $header => $value
             ));
-            $this->getEventManager()->notify('request.receive.header', array(
+            $this->dispatch('request.receive.header', array(
                 'header' => $header,
                 'value' => $value
             ), true);
@@ -660,7 +669,9 @@ class Request extends AbstractMessage implements RequestInterface
             $this->getParams()->set('queued_response', $response);
         }
 
-        $this->getEventManager()->notify('request.set_response', $this->response);
+        $this->dispatch('request.set_response', array(
+            'response' => $this->response
+        ));
 
         return $this;
     }
@@ -810,6 +821,38 @@ class Request extends AbstractMessage implements RequestInterface
 
         return $this;
     }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function setEventDispatcher(EventDispatcherInterface $eventDispatcher)
+    {
+        $this->eventDispatcher = $eventDispatcher;
+        
+        return $this;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getEventDispatcher()
+    {
+        if (!$this->eventDispatcher) {
+            $this->eventDispatcher = new EventDispatcher();
+        }
+        
+        return $this->eventDispatcher;
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    public function dispatch($eventName, array $context = array())
+    {
+        $context['event'] = $eventName;
+        $context['request'] = $this;
+        $this->getEventDispatcher()->dispatch($eventName, new Event($context));
+    }
 
     /**
      * {@inheritdoc}
@@ -871,11 +914,16 @@ class Request extends AbstractMessage implements RequestInterface
         }
 
         $this->state = self::STATE_COMPLETE;
-        $this->getEventManager()->notify('request.sent');
+        $this->dispatch('request.sent', array(
+            'request'  => $this,
+            'response' => $this->response
+        ));
 
         // Some response processors will remove the response or reset the state
         if ($this->state == RequestInterface::STATE_COMPLETE) {
-            $this->getEventManager()->notify('request.complete', $this->response);
+            $this->dispatch('request.complete', array(
+                'response' => $this->response
+            ));
             // Pass the request to the onComplete handler
             call_user_func($this->onComplete, $this, $this->response, array(__CLASS__, 'defaultOnComplete'));
         }

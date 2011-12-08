@@ -2,7 +2,7 @@
 
 namespace Guzzle\Http\Message;
 
-use Guzzle\Common\Event\SubjectInterface;
+use Guzzle\Common\HasDispatcherInterface;
 use Guzzle\Http\ClientInterface;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\QueryString;
@@ -13,7 +13,7 @@ use Guzzle\Http\Cookie;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-interface RequestInterface extends MessageInterface, SubjectInterface
+interface RequestInterface extends MessageInterface, HasDispatcherInterface
 {
     const STATE_NEW = 'new';
     const STATE_COMPLETE = 'complete';

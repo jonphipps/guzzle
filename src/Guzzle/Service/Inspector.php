@@ -4,6 +4,11 @@ namespace Guzzle\Service;
 
 use Guzzle\Guzzle;
 use Guzzle\Common\Collection;
+use Symfony\Component\Validator\Constraint;
+use Symfony\Component\Validator\ConstraintValidatorFactory;
+use Symfony\Component\Validator\Validator;
+use Symfony\Component\Validator\Mapping\Loader\StaticMethodLoader;
+use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
 
 /**
  * Inpects configuration options versus defined parameters, adding default
@@ -17,7 +22,7 @@ use Guzzle\Common\Collection;
  * annotation.
  *
  * The following is the format for @guzzle arguments:
- * @guzzle argument_name [default="default value"] [required="true|false"] [type="registered filter name"] [doc="Description of argument"]
+ * @guzzle argument_name [default="default value"] [required="true|false"] [type="registered constraint name"] [doc="Description of argument"]
  *
  * Here's an example:
  * @guzzle my_argument default="hello" required="true" doc="Set the argument to control the widget..."
@@ -39,9 +44,14 @@ class Inspector
     protected $cache = array();
 
     /**
-     * @var array Array of loaded filter objects
+     * @var array Array of aliased constraints
      */
-    protected $filters = array();
+    protected $constraints = array();
+    
+    /**
+     * @var Validator
+     */
+    protected $validator;
 
     /**
      * Get an instance of the Inspector
@@ -91,51 +101,86 @@ class Inspector
      */
     public function __construct()
     {
-        $this->filters = array(
-            'integer' => array(__NAMESPACE__ . '\\Filter\\IntegerFilter', null, null),
-            'float' => array(__NAMESPACE__ . '\\Filter\\FloatFilter', null, null),
-            'string' => array(__NAMESPACE__ . '\\Filter\\StringFilter', null, null),
-            'timestamp' => array(__NAMESPACE__ . '\\Filter\\TimestampFilter', null, null),
-            'date' => array(__NAMESPACE__ . '\\Filter\\DateFilter', null, null),
-            'boolean' => array(__NAMESPACE__ . '\\Filter\\BooleanFilter', null, null),
-            'class' => array(__NAMESPACE__ . '\\Filter\\ClassFilter', null, null),
-            'array' => array(__NAMESPACE__ . '\\Filter\\ArrayFilter', null, null),
-            'enum' => array(__NAMESPACE__ . '\\Filter\\EnumFilter', null, null),
-            'regex' => array(__NAMESPACE__ . '\\Filter\\RegexFilter', null, null)
+        $base = 'Symfony\\Component\\Validator\\Constraints\\';
+        $this->constraints = array(
+            'blank'     => array($base . 'Blank', null),
+            'not_blank' => array($base . 'NotBlank', null),
+            'not_null'  => array($base . 'NotNull', null),
+            'integer'   => array($base . 'Type', array('type' => 'integer')),
+            'float'     => array($base . 'Type', array('type' => 'float')),
+            'string'    => array($base . 'Type', array('type' => 'string')),
+            'object'    => array($base . 'Type', array('type' => 'object')),
+            'date'      => array($base . 'Date', null),
+            'date_time' => array($base . 'DateTime', null),
+            'time'      => array($base . 'Time', null),
+            'boolean'   => array($base . 'Choice', array('choices' => array('true', 'false', '0', '1'))),
+            'country'   => array($base . 'Country', null),
+            'email'     => array($base . 'Email', null),
+            'ip'        => array($base . 'Ip', null),
+            'language'  => array($base . 'Language', null),
+            'locale'    => array($base . 'Locale', null),
+            'url'       => array($base . 'Url', null),
+            'file'      => array($base . 'File', null),
+            'image'     => array($base . 'Image', null),
+            'type'      => array($base . 'Type', null),
+            'enum'      => array($base . 'Choice', null),
+            'regex'     => array($base . 'Regex', null)
         );
+    }
+    
+    /**
+     * Set the validator to use with the inspector
+     * 
+     * @param Validator $validator 
+     * 
+     * @return Inspector
+     */
+    public function setValidator(Validator $validator)
+    {
+        $this->validator = $validator;
+        
+        return $this;
+    }
+    
+    /**
+     * Get the validator associated with the inspector.  A default validator 
+     * will be created if none has already been associated
+     * 
+     * @return Validator
+     */
+    public function getValidator()
+    {
+        if (!$this->validator) {
+            $this->validator = new Validator(new ClassMetadataFactory(new StaticMethodLoader()), new ConstraintValidatorFactory());
+        }
+        
+        return $this->validator;
     }
 
     /**
-     * Get an array of the registered filters by name
+     * Get an array of the registered constraints by name
      *
      * @return array
      */
-    public function getRegisteredFilters()
+    public function getRegisteredConstraints()
     {
-        return array_map(function($filter) {
-            return $filter[0];
-        }, $this->filters);
+        return array_map(function($constraint) {
+            return $constraint[0];
+        }, $this->constraints);
     }
 
     /**
-     * Register a filter class with a special name
+     * Register a constraint class with a special name
      *
-     * @param string $name Name of the filter to register
-     * @param string|FilterInterface $class Name of the class or object to use when filtering by this name
-     * @param string $default Default value to pass to the filter
+     * @param string $name Name of the constraint to register
+     * @param string $class Name of the class or object to use when filtering by this name
+     * @param array $default Default values to pass to the constraint
      *
      * @return Inspector
      */
-    public function registerFilter($name, $class, $default = null)
+    public function registerConstraint($name, $class, array $default = array())
     {
-        $object = null;
-
-        if (is_object($class)) {
-            $object = $class;
-            $class = get_class($object);
-        }
-
-        $this->filters[$name] = array($class, $object, array($default));
+        $this->constraints[$name] = array($class, $default);
     }
 
     /**
@@ -251,9 +296,12 @@ class Inspector
 
             // Ensure that the correct data type is being used
             if ($arg->get('type')) {
-                $result = $this->validate($arg->get('type'), $config->get($name));
-                if ($result !== true && $result !== null) {
-                    $errors[] = $result;
+                $constraint = $this->getConstraint($arg->get('type'));
+                $result = $this->getValidator()->validateValue($config->get($name), $constraint);
+                if ($result && count($result)) {
+                    $errors = array_merge($errors, array_map(function($message) {
+                        return $message->getMessage();
+                    }, $result->getIterator()->getArrayCopy()));
                 }
             }
 
@@ -265,7 +313,7 @@ class Inspector
                 $errors[] = 'Requires that the ' . $name . ' argument be <= ' . $arg->get('max_length') . ' characters.';
             }
         }
-
+        
         if (empty($errors)) {
             return true;
         } else {
@@ -278,38 +326,35 @@ class Inspector
     }
 
     /**
-     * Get a filter from the registered filters
+     * Get a constraint by name: e.g. "type:{ class: 'Guzzle\Common\Collection' }"
      *
-     * @param string $name Name of the filter to retrieve
-     * @param mixed $value Value to validate
-     *
-     * @return bool|string Returns TRUE on success or a string error message on
-     *      failure
+     * @param string $name Name of the constraint to retrieve.  May contain 
+     *      arguments to pass to the constraint.
+     * 
+     * @return Contraint
      */
-    private function validate($name, $value)
+    private function getConstraint($name)
     {
-        $parts = array_map('trim', explode(':', $name));
+        $parts = array_map('trim', explode(';', $name));
         $name = $parts[0];
 
-        if (!isset($this->filters[$name])) {
-            throw new \InvalidArgumentException($name . ' has not been registered as a filter');
+        if (!isset($this->constraints[$name])) {
+            throw new \InvalidArgumentException($name . ' has not been registered');
         }
-
-        // Use supplied arguments or the defaults if they are set
-        $args = array_slice($parts, 1);
-        if (empty($args)) {
-            $args = (array) $this->filters[$name][2];
+        
+        // Use supplied arguments mixed with the default args
+        $args = (array) $this->constraints[$name][1];
+        
+        // JSON params can be passed after the semicolon
+        if (!empty($parts[1])) {
+            foreach (explode(';', $parts[1]) as $piece) {
+                list($k, $v) = explode('=', $piece);
+                $args[$k] = $v;
+            }
         }
-
-        if (!isset($this->filters[$name][1])) {
-            // Create a new filter and store it in a Flyweight type cache
-            $class = $this->filters[$name][0];
-            $this->filters[$name][1] = new $class($args);
-        } else {
-            // Set the passed values
-            $this->filters[$name][1]->replace($args);
-        }
-
-        return $this->filters[$name][1]->process($value);
+        
+        $class = $this->constraints[$name][0];
+        
+        return new $class($args);
     }
 }

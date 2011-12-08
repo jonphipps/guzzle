@@ -77,20 +77,11 @@ class CachePluginTest extends \Guzzle\Tests\GuzzleTestCase
         $plugin = new CachePlugin($this->adapter, true);
         $client = new Client($this->getServer()->getUrl());
         $client->setCurlMulti(new \Guzzle\Http\Curl\CurlMulti());
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
 
-        // Make sure that non GET and HEAD requests are not attached
-        $request = $client->post();
-        $this->assertFalse($request->getEventManager()->hasObserver($plugin));
-        
-        // Create a new Request
         $request = $client->get();
-        $this->assertTrue($request->getEventManager()->hasObserver($plugin));
-
-        // Send the Request to the test server
         $request->send();
-        $this->assertEquals('data', $request->getResponse()->getBody(true));
-
+        
         // Calculate the cache key like the cache plugin does
         $key = $plugin->getCacheKey($request);
         // Make sure that the cache plugin set the request in cache
@@ -102,8 +93,6 @@ class CachePluginTest extends \Guzzle\Tests\GuzzleTestCase
         // Test that the request is set manually
         // The test server has no more script data, so if it actually sends a
         // request it will fail the test.
-        $request = $client->get();
-        $this->assertTrue($request->getEventManager()->hasObserver($plugin));
         $this->assertEquals($key, $plugin->getCacheKey($request));
         $request->send();
         $this->assertEquals('data', $request->getResponse()->getBody(true));
@@ -124,7 +113,7 @@ class CachePluginTest extends \Guzzle\Tests\GuzzleTestCase
         // Create a new Cache plugin
         $plugin = new CachePlugin($this->adapter, true);
         $client = new Client($this->getServer()->getUrl());
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
 
         // Create a new request using the Cache plugin
         $request = $client->get();
@@ -212,7 +201,7 @@ class CachePluginTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $plugin = new CachePlugin($this->adapter, true);
         $client = new Client($this->getServer()->getUrl());
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         
         $request = $client->get('http://www.test.com/');
         $request->getParams()->set('cache.override_ttl', 1000);
@@ -220,7 +209,6 @@ class CachePluginTest extends \Guzzle\Tests\GuzzleTestCase
         $request->send();
 
         $request2 = $client->get('http://www.test.com/');
-        $request2->getEventManager()->attach($plugin);
         $response = $request2->send();
 
         $this->assertEquals(1000, $response->getHeader('X-Guzzle-Ttl'));
@@ -237,7 +225,7 @@ class CachePluginTest extends \Guzzle\Tests\GuzzleTestCase
 
         $client = new Client($this->getServer()->getUrl());
         $plugin = new CachePlugin($this->adapter, true);
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
 
         $request = $client->get('test');
         // Cache this response for 1000 seconds if it is cacheable
@@ -411,7 +399,7 @@ class CachePluginTest extends \Guzzle\Tests\GuzzleTestCase
         
         $plugin = new CachePlugin($this->adapter, true);
         $client = new Client($server->getUrl());
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         
         $request = $client->get();
         $request->getCurlOptions()->set(\CURLOPT_TIMEOUT, 2);

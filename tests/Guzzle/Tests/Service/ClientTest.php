@@ -8,13 +8,13 @@ use Guzzle\Common\Log\ClosureLogAdapter;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Curl\CurlMulti;
+use Guzzle\Http\Plugin\MockPlugin;
 use Guzzle\Service\Description\ApiCommand;
 use Guzzle\Service\Client;
 use Guzzle\Service\Command\CommandSet;
 use Guzzle\Service\Command\CommandInterface;
 use Guzzle\Service\Description\XmlDescriptionBuilder;
 use Guzzle\Service\Description\ServiceDescription;
-use Guzzle\Http\Plugin\MockPlugin;
 use Guzzle\Tests\Service\Mock\Command\MockCommand;
 
 /**
@@ -87,7 +87,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
     public function testExecutesCommandsWithArray()
     {
         $client = new Client('http://www.test.com/');
-        $client->getEventManager()->attach(new MockPlugin(array(
+        $client->getEventDispatcher()->addSubscriber(new MockPlugin(array(
             new \Guzzle\Http\Message\Response(200),
             new \Guzzle\Http\Message\Response(200)
         )));
@@ -138,7 +138,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
     public function testExecutesCommandSets()
     {
         $client = new Client('http://www.test.com/');
-        $client->getEventManager()->attach(new MockPlugin(array(
+        $client->getEventDispatcher()->addSubscriber(new MockPlugin(array(
             new \Guzzle\Http\Message\Response(200)
         )));
 

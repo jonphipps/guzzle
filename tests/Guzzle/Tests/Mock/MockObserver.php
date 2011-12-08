@@ -2,36 +2,72 @@
 
 namespace Guzzle\Tests\Mock;
 
-use Guzzle\Common\Event\SubjectInterface;
+use Guzzle\Common\Event;
 use Guzzle\Common\Event\EventManager;
 use Guzzle\Common\Event\ObserverInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class MockObserver implements ObserverInterface
+class MockObserver implements \Countable, EventSubscriberInterface
 {
-    public $notified = 0;
-    public $subject;
-    public $context;
-    public $event;
-    public $log = array();
-    public $logByEvent = array();
     public $events = array();
-
-   /**
+    
+    public static function getSubscribedEvents()
+    {
+        return array();
+    }
+    
+    public function has($eventName)
+    {
+        foreach ($this->events as $event) {
+            if ($event->getEventName() == $eventName) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    public function getLastEvent()
+    {
+        return end($this->events);
+    }
+    
+    public function count()
+    {
+        return count($this->events);
+    }
+    
+    public function getGrouped()
+    {
+        $events = array();
+        foreach ($this->events as $event) {
+            if (!isset($events[$event->getEventName()])) {
+                $events[$event->getEventName()] = array();
+            }
+            $events[$event->getEventName()][] = $event;
+        }
+        
+        return $events;
+    }
+    
+    public function getData($event, $key, $occurence = 0)
+    {
+        $grouped = $this->getGrouped();
+        if (isset($grouped[$event])) {
+            return $grouped[$event][$occurence][$key];
+        }
+        
+        return null;
+    }
+    
+    /**
      * {@inheritdoc}
      */
-    public function update(SubjectInterface $subject, $event, $context = null)
+    public function update(Event $event)
     {
-        $this->notified++;
-        $this->subject = $subject;
-        $this->context = $context;
-        $this->event = $event;
         $this->events[] = $event;
-        $this->log[] = array($event, $context);
-        $this->logByEvent[$event] = $context;
-        
-        return true;
     }
 }

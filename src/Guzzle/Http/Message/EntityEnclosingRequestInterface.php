@@ -2,7 +2,6 @@
 
 namespace Guzzle\Http\Message;
 
-use Guzzle\Common\Event\ObserverInterface;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\QueryString;
 

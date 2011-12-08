@@ -2,8 +2,7 @@
 
 namespace Guzzle\Service\Command;
 
-use Guzzle\Common\Event\ObserverInterface;
-use Guzzle\Common\Event\SubjectInterface;
+use Guzzle\Common\Event;
 use Guzzle\Http\Curl\CurlMultiInterface;
 use Guzzle\Http\Curl\CurlMulti;
 use Guzzle\Service\ClientInterface;
@@ -19,7 +18,7 @@ use Guzzle\Service\Command\CommandInterface;
  *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class CommandSet implements \IteratorAggregate, \Countable, ObserverInterface
+class CommandSet implements \IteratorAggregate, \Countable
 {
     /**
      * @var array Collections of CommandInterface objects
@@ -97,8 +96,10 @@ class CommandSet implements \IteratorAggregate, \Countable, ObserverInterface
             foreach ($parallel as $command) {
                 $request = $command->prepare();
                 $request->getParams()->set('command', $command);
-                $request->getEventManager()->attach($this, -99999);
-                $command->getClient()->getEventManager()->notify('command.before_send', $command);
+                $request->getEventDispatcher()->addListener('request.complete', array($this, 'update'), -99999);
+                $command->getClient()->dispatch('command.before_send', array(
+                    'command' => $command
+                ));
                 $command->getClient()->getCurlMulti()->add($command->getRequest());
                 if (!in_array($command->getClient()->getCurlMulti(), $multis)) {
                     $multis[] = $command->getClient()->getCurlMulti();
@@ -179,21 +180,24 @@ class CommandSet implements \IteratorAggregate, \Countable, ObserverInterface
     }
 
     /**
-     * Trigger the result of the command to be created as commands complete
+     * Trigger the result of the command to be created as commands complete and 
+     * make sure the command isn't going to send more requests
      *
      * {@inheritdoc}
      */
-    public function update(SubjectInterface $subject, $event, $context = null)
+    public function update(Event $event)
     {
-        if ($event == 'request.complete' && $subject->getParams()->hasKey('command')) {
-            $command = $subject->getParams()->get('command');
-            // Make sure the command isn't going to send more requests
-            if ($command && $command->isExecuted()) {
-                $subject->getEventManager()->detach($this);
-                $subject->getParams()->remove('command');
-                $command->getResult();
-                $command->getClient()->getEventManager()->notify('command.after_send', $command);
-            }
+        $request = $event['request'];
+        $command = $request->getParams()->get('command');
+        if ($command && $command->isExecuted()) {
+            $request = $event['request'];
+            $request->getEventDispatcher()->removeListener('request.complete', $this);
+            $request->getParams()->remove('command');
+            // Force the result to be processed
+            $command->getResult();
+            $command->getClient()->dispatch('command.after_send', array(
+                'command' => $command
+            ));
         }
     }
 }

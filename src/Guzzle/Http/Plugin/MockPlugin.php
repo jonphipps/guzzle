@@ -2,24 +2,18 @@
 
 namespace Guzzle\Http\Plugin;
 
-use Guzzle\Common\Event\ObserverInterface;
-use Guzzle\Common\Event\SubjectInterface;
-use Guzzle\Common\Event\AbstractSubject;
+use Guzzle\Common\Event;
+use Guzzle\Common\AbstractHasDispatcher;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\Response;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Queues mock responses and delivers mock responses in a fifo order.
  *
- * Signals emitted:
- *
- *  event           context             description
- *  -----           -------             -----------
- *  mock.request    RequestInterface    Received a request
- *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class MockPlugin extends AbstractSubject implements ObserverInterface, \Countable
+class MockPlugin extends AbstractHasDispatcher implements EventSubscriberInterface, \Countable
 {
     /**
      * @var array Array of mock responses
@@ -30,6 +24,22 @@ class MockPlugin extends AbstractSubject implements ObserverInterface, \Countabl
      * @var bool Whether or not to remove the plugin when the queue is empty
      */
     protected $temporary = false;
+    
+    /**
+     * {@inheritdoc} 
+     */
+    public static function getSubscribedEvents()
+    {
+        return array('client.create_request' => 'onRequestCreate');
+    }
+    
+    /**
+     * {@inheritdoc} 
+     */
+    public static function getAllEvents()
+    {
+        return array('mock.request');
+    }
 
     /**
      * Get a mock response from a file
@@ -144,22 +154,28 @@ class MockPlugin extends AbstractSubject implements ObserverInterface, \Countabl
      */
     public function dequeue(RequestInterface $request)
     {
-        $this->getEventManager()->notify('mock.request', $request);
+        $this->dispatch('mock.request', array(
+            'plugin'  => $this,
+            'request' => $request
+        ));
         $request->setResponse(array_shift($this->queue), true);
 
         return $this;
     }
 
     /**
-     * {@inheritdoc}
+     * Called when a request completes
+     * 
+     * @param Event $event
      */
-    public function update(SubjectInterface $subject, $event, $context = null)
+    public function onRequestCreate(Event $event)
     {
-        if ($event == 'request.create' && !empty($this->queue)) {
-            $this->dequeue($context);
+        if (!empty($this->queue)) {
+            $request = $event['request'];
+            $this->dequeue($request);
             // Detach the filter from the client so it's a one-time use
-            if ($this->temporary && empty($this->queue)) {
-                $subject->getEventManager()->detach($this);
+            if ($this->temporary && empty($this->queue) && $request->getClient()) {
+                $request->getClient()->getEventDispatcher()->removeSubscriber($this);
             }
         }
     }

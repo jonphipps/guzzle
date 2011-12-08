@@ -422,7 +422,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
         // Create a new request, attach the cookie plugin, set a mock response
         $request = new Request('GET', 'http://www.example.com/');
         $request->setClient(new Client());
-        $request->getEventManager()->attach($this->plugin);
+        $request->getEventDispatcher()->addSubscriber($this->plugin);
         $request->setResponse($response, true);
         $request->send();
 
@@ -465,10 +465,10 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
         $request4 = new Request('GET', 'http://a.y.example.com/acme/');
         $request4->setClient(new Client());
 
-        $request1->getEventManager()->attach($this->plugin);
-        $request2->getEventManager()->attach($this->plugin);
-        $request3->getEventManager()->attach($this->plugin);
-        $request4->getEventManager()->attach($this->plugin);
+        $request1->getEventDispatcher()->addSubscriber($this->plugin);
+        $request2->getEventDispatcher()->addSubscriber($this->plugin);
+        $request3->getEventDispatcher()->addSubscriber($this->plugin);
+        $request4->getEventDispatcher()->addSubscriber($this->plugin);
 
         // Set a secure cookie
         $response1 = Response::factory("HTTP/1.1 200 OK\r\nSet-Cookie: a=b; c=d; Max-Age=86400; domain=.example.com; secure;\r\n\r\n");
@@ -522,7 +522,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
         ));
 
         $request = RequestFactory::create('GET', $this->getServer()->getUrl());
-        $request->getEventManager()->attach($this->plugin);
+        $request->getEventDispatcher()->addSubscriber($this->plugin);
         $request->setClient(new Client());
 
         $request->send();
@@ -564,15 +564,14 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
             "HTTP/1.1 200 OK\r\n" .
             "Content-Length: 0\r\n\r\n"
         ));
+        
+        $client = new Client($this->getServer()->getUrl());
+        $client->getEventDispatcher()->addSubscriber($this->plugin);
 
-        $request = RequestFactory::create('GET', $this->getServer()->getUrl());
-        $request->getEventManager()->attach($this->plugin);
-        $request->setClient(new Client());
+        $request = $client->get();
         $request->send();
 
-        $request = RequestFactory::create('GET', $this->getServer()->getUrl());
-        $request->getEventManager()->attach($this->plugin);
-        $request->setClient(new Client());
+        $request = $client->get();
         $request->send();
 
         $this->assertEquals('test=583551', $request->getHeader('Cookie'));

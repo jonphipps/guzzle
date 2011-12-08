@@ -10,10 +10,11 @@ require_once __DIR__ . '/../vendor/Symfony/Component/ClassLoader/UniversalClassL
 $classLoader = new \Symfony\Component\ClassLoader\UniversalClassLoader();
 $classLoader->registerNamespaces(array(
     'Guzzle\Tests' => __DIR__,
-    'Guzzle' => __DIR__ . '/../src',
-    'Doctrine' => __DIR__ . '/../vendor/Doctrine/lib',
-    'Monolog' => __DIR__ . '/../vendor/Monolog/src',
-    'Zend' => __DIR__ . '/../vendor'
+    'Guzzle'       => __DIR__ . '/../src',
+    'Doctrine'     => __DIR__ . '/../vendor/Doctrine/lib',
+    'Monolog'      => __DIR__ . '/../vendor/Monolog/src',
+    'Zend'         => __DIR__ . '/../vendor',
+    'Symfony'      => __DIR__ . '/../vendor'
 ));
 $classLoader->register();
 

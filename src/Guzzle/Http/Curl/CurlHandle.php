@@ -55,27 +55,34 @@ class CurlHandle
             CURLOPT_STDERR => fopen('php://temp', 'r+'),
             CURLOPT_VERBOSE => true,
             CURLOPT_HTTPHEADER => array(),
-            CURLOPT_WRITEFUNCTION => function($curl, $data) use ($request) {
-                $request->getEventManager()->notify('curl.callback.write', $data);
-                return $request->getResponse()->getBody()->write($data);
+            CURLOPT_WRITEFUNCTION => function($curl, $write) use ($request) {
+                $request->dispatch('curl.callback.write', array(
+                    'request' => $request,
+                    'write' => $write
+                ));
+                return $request->getResponse()->getBody()->write($write);
             },
-            CURLOPT_HEADERFUNCTION => function($curl, $data) use ($request) {
-                return $request->receiveResponseHeader($data);
+            CURLOPT_HEADERFUNCTION => function($curl, $header) use ($request) {
+                return $request->receiveResponseHeader($header);
             },
             CURLOPT_READFUNCTION => function($ch, $fd, $length) use ($request) {
                 $read = ($request->getBody()) ? $request->getBody()->read($length) : 0;
                 if ($read) {
-                    $request->getEventManager()->notify('curl.callback.read', $read, true);
+                    $request->dispatch('curl.callback.read', array(
+                        'request' => $request,
+                        'read' => $read
+                    ));
                 }
                 return $read === false || $read === 0 ? '' : $read;
             },
             CURLOPT_PROGRESSFUNCTION => function($downloadSize, $downloaded, $uploadSize, $uploaded) use ($request) {
-                $request->getEventManager()->notify('curl.callback.progress', array(
+                $request->dispatch('curl.callback.progress', array(
+                    'request'       => $request,
                     'download_size' => $downloadSize,
-                    'downloaded' => $downloaded,
-                    'upload_size' => $uploadSize,
-                    'uploaded' => $uploaded
-                ), true);
+                    'downloaded'    => $downloaded,
+                    'upload_size'   => $uploadSize,
+                    'uploaded'      => $uploaded
+                ));
             }
         );
 

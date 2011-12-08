@@ -123,7 +123,6 @@ class EntityEnclosingRequestTest extends \Guzzle\Tests\GuzzleTestCase
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nData");
         $request = RequestFactory::create('PUT', 'http://www.test.com/');
         $request->setBody(EntityBody::factory(fopen($this->getServer()->getUrl(), 'r')));
-        $request->getEventManager()->notify('request.prepare_entity_body');
         $this->assertNull($request->getHeader('Content-Length'));
         $this->assertEquals('chunked', $request->getHeader('Transfer-Encoding'));
     }
@@ -236,7 +235,6 @@ class EntityEnclosingRequestTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $request = RequestFactory::create('POST', 'http://www.guzzle-project.com/');
         $request->setPostField('a', 'b');
-        $request->getEventManager()->notify('request.prepare_entity_body');
         $this->assertEquals('application/x-www-form-urlencoded', $request->getHeader('Content-Type'));
         $this->assertEquals('a=b', $request->getCurlOptions()->get(CURLOPT_POSTFIELDS));
     }
@@ -248,7 +246,6 @@ class EntityEnclosingRequestTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $request = RequestFactory::create('POST', 'http://www.guzzle-project.com/');
         $request->addPostFiles(array('file' => __FILE__));
-        $request->getEventManager()->notify('request.prepare_entity_body');
         $this->assertEquals('multipart/form-data', $request->getHeader('Content-Type'));
         $this->assertEquals(array('file' => '@' . __FILE__), $request->getCurlOptions()->get(CURLOPT_POSTFIELDS));
     }

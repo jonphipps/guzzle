@@ -126,7 +126,7 @@ class CommandTest extends AbstractCommandTest
         ), '<xml><data>123</data></xml>');
 
         // Set a mock response
-        $client->getEventManager()->attach(new MockPlugin(array(
+        $client->getEventDispatcher()->addSubscriber(new MockPlugin(array(
             $response
         )));
 
@@ -151,7 +151,7 @@ class CommandTest extends AbstractCommandTest
     {
         $client = $this->getClient();
 
-        $client->getEventManager()->attach(new MockPlugin(array(
+        $client->getEventDispatcher()->addSubscriber(new MockPlugin(array(
             new Response(200, array(
                 'Content-Type' => 'application/octect-stream'
             ), 'abc,def,ghi')

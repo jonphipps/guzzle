@@ -3,7 +3,6 @@
 namespace Guzzle\Http\Message;
 
 use Guzzle\Common\Collection;
-use Guzzle\Common\Event\AbstractSubject;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\HttpException;
 

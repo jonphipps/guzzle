@@ -2,9 +2,9 @@
 
 namespace Guzzle\Http\Curl;
 
+use Guzzle\Common\HasDispatcherInterface;
 use Guzzle\Common\ExceptionCollection;
 use Guzzle\Http\Message\RequestInterface;
-use Guzzle\Common\Event\SubjectInterface;
 
 /**
  * Execute a pool of {@see RequestInterface} objects in
@@ -12,15 +12,15 @@ use Guzzle\Common\Event\SubjectInterface;
  *
  * @author  michael@guzzlephp.org
  */
-interface CurlMultiInterface extends SubjectInterface, \Countable
+interface CurlMultiInterface extends HasDispatcherInterface, \Countable
 {
-    // Various states of the pool's request cycle
-    const BEFORE_SEND = 'before_send';
-    const POLLING = 'polling';
-    const POLLING_REQUEST = 'polling_request';
-    const COMPLETE = 'complete';
-    const ADD_REQUEST = 'add_request';
-    const REMOVE_REQUEST = 'remove_request';
+    const BEFORE_SEND = 'curl_multi.before_send';
+    const POLLING = 'curl_multi.polling';
+    const POLLING_REQUEST = 'curl_multi.polling_request';
+    const COMPLETE = 'curl_multi.complete';
+    const ADD_REQUEST = 'curl_multi.add_request';
+    const REMOVE_REQUEST = 'curl_multi.remove_request';
+    const MULTI_EXCEPTION = 'curl_multi.exception';
 
     const STATE_IDLE = 'idle';
     const STATE_SENDING = 'sending';

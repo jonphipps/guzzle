@@ -2,16 +2,15 @@
 
 namespace Guzzle\Tests\Http\Curl;
 
+use Guzzle\Common\Event;
+use Guzzle\Common\ExceptionCollection;;
 use Guzzle\Common\Collection;
-use Guzzle\Common\Event\ObserverInterface;
-use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Http\Client;
 use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Curl\CurlHandle;
 use Guzzle\Http\Curl\CurlMulti;
-use Guzzle\Common\ExceptionCollection;;
 use Guzzle\Http\Curl\CurlException;
 use Guzzle\Tests\Mock\MockMulti;
 
@@ -20,7 +19,7 @@ use Guzzle\Tests\Mock\MockMulti;
  * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Http\Curl\CurlMulti
  */
-class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements ObserverInterface
+class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
      * @var Guzzle\Http\Curl\CurlMulti
@@ -31,6 +30,8 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
      * @var Guzzle\Common\Collection
      */
     private $updates;
+    
+    private $mock;
 
     /**
      * Prepares the environment before running a test.
@@ -40,7 +41,7 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         parent::setUp();
         $this->updates = new Collection();
         $this->multi = new MockMulti();
-        $this->multi->getEventManager()->attach($this);
+        $this->mock = $this->getWildcardObserver($this->multi);
     }
 
     /**
@@ -81,7 +82,7 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
     public function testRequestsCanBeAddedAndCounted()
     {
         $multi = new CurlMulti();
-        $multi->getEventManager()->attach($this);
+        $mock = $this->getWildcardObserver($multi);
         $request1 = new Request('GET', 'http://www.google.com/');
         $multi->add($request1);
         $this->assertEquals(array($request1), $multi->all());
@@ -91,10 +92,10 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         $this->assertEquals(array($request1, $request2), $multi->all());
         $this->assertEquals(2, count($multi));
 
-        $this->assertTrue($this->updates->hasKey(CurlMulti::ADD_REQUEST) !== false);
-        $this->assertFalse($this->updates->hasKey(CurlMulti::REMOVE_REQUEST) !== false);
-        $this->assertFalse($this->updates->hasKey(CurlMulti::POLLING) !== false);
-        $this->assertFalse($this->updates->hasKey(CurlMulti::COMPLETE) !== false);
+        $this->assertTrue($mock->has(CurlMulti::ADD_REQUEST));
+        $this->assertFalse($mock->has(CurlMulti::REMOVE_REQUEST));
+        $this->assertFalse($mock->has(CurlMulti::POLLING));
+        $this->assertFalse($mock->has(CurlMulti::COMPLETE));
     }
 
     /**
@@ -138,13 +139,9 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
 
         $this->assertEquals('idle', $this->multi->getState());
 
-        $this->assertTrue($this->updates->hasKey(CurlMulti::ADD_REQUEST) !== false);
-        $this->assertTrue($this->updates->hasKey(CurlMulti::POLLING) !== false);
-        $this->assertTrue($this->updates->hasKey(CurlMulti::COMPLETE) !== false);
+        $this->assertTrue($this->mock->has(CurlMulti::ADD_REQUEST));
+        $this->assertTrue($this->mock->has(CurlMulti::COMPLETE));
 
-        $this->assertEquals(array('add_request', $request), $this->updates->get(CurlMulti::ADD_REQUEST));
-        $this->assertEquals(array('complete', null), $this->updates->get(CurlMulti::COMPLETE));
-        
         $this->assertEquals('Body', $request->getResponse()->getBody()->__toString());
 
         // Sending it again will not do anything because there are no requests
@@ -170,9 +167,9 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         ));
 
         $request1 = new Request('GET', $this->getServer()->getUrl());
-        $request1->getEventManager()->attach($this);
+        $mock1 = $this->getWildcardObserver($request1);
         $request2 = new Request('GET', $this->getServer()->getUrl());
-        $request2->getEventManager()->attach($this);
+        $mock2 = $this->getWildcardObserver($request2);
         
         $this->multi->add($request1);
         $this->multi->add($request2);
@@ -189,8 +186,8 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         $this->assertTrue($response1->getStatusCode() == '204' || $response2->getStatusCode() == '204');
         $this->assertNotEquals((string) $response1, (string) $response2);
 
-        $this->assertTrue($this->updates->hasKey('request.before_send') !== false);
-        $this->assertInternalType('array', $this->updates->get('request.before_send'));
+        $this->assertTrue($mock1->has('request.before_send'));
+        $this->assertTrue($mock2->has('request.before_send'));
     }
 
     /**
@@ -289,9 +286,9 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         $request->setResponse(new Response(200), true);
         $this->multi->add($request);
         $this->multi->send();
-        $this->assertTrue($this->updates->hasKey(CurlMulti::ADD_REQUEST) !== false);
-        $this->assertTrue($this->updates->hasKey(CurlMulti::POLLING) === false);
-        $this->assertTrue($this->updates->hasKey(CurlMulti::COMPLETE) !== false);
+        $this->assertTrue($this->mock->has(CurlMulti::ADD_REQUEST));
+        $this->assertTrue($this->mock->has(CurlMulti::POLLING) === false);
+        $this->assertTrue($this->mock->has(CurlMulti::COMPLETE) !== false);
     }
 
     /**
@@ -305,12 +302,10 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         ));
         $client = new Client($this->getServer()->getUrl());
         $r = $client->get();
-        $r->getEventManager()->attach(function($subject, $event) use ($client) {
-            if ($event == 'request.receive.status_line') {
-                // Create a request using a queued response
-                $request = $client->get()->setResponse(new Response(200), true);
-                $request->send();
-            }
+        $r->getEventDispatcher()->addListener('request.receive.status_line', function(Event $event) use ($client) {
+            // Create a request using a queued response
+            $request = $client->get()->setResponse(new Response(200), true);
+            $request->send();
         });
 
         $r->send();
@@ -342,24 +337,20 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
             $client->get()
         );
         
-        $callback = function($subject, $event) use ($client) {
-            if ($event == 'request.complete') {
-                $client->getConfig()->set('called', $client->getConfig('called') + 1);
-                $request = $client->get();
-                if ($client->getConfig('called') <= 2) {
-                    $request->getEventManager()->attach(function($s, $e) use ($client) {
-                        if ($e == 'request.complete') {
-                            $client->head()->send();
-                        }
-                    });
-                }
-                $request->send();
+        $callback = function(Event $event) use ($client) {
+            $client->getConfig()->set('called', $client->getConfig('called') + 1);
+            $request = $client->get();
+            if ($client->getConfig('called') <= 2) {
+                $request->getEventDispatcher()->addListener('request.complete', function(Event $event) use ($client) {
+                    $client->head()->send();
+                });
             }
+            $request->send();
         };
         
-        $requests[0]->getEventManager()->attach($callback);
-        $requests[1]->getEventManager()->attach($callback);
-        $requests[2]->getEventManager()->attach($callback);
+        $requests[0]->getEventDispatcher()->addListener('request.complete', $callback);
+        $requests[1]->getEventDispatcher()->addListener('request.complete', $callback);
+        $requests[2]->getEventDispatcher()->addListener('request.complete', $callback);
         
         $client->send($requests);
         
@@ -375,7 +366,23 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
         $client = new Client($this->getServer()->getUrl());
         $r = $client->get();
-        $r->getEventManager()->attach(function() use ($client) {
+        $r->getEventDispatcher()->addListener('request.sent', function() use ($client) {
+            // Create a request using a queued response
+            $client->get()->setResponse(new Response(404), true)->send();
+        });
+        $r->send();
+    }
+    
+    /**
+     * @covers Guzzle\Http\Curl\CurlMulti::removeQueuedRequest
+     * @expectedException Guzzle\Http\Message\BadResponseException
+     */
+    public function testCatchesExceptionsWhenRemovingQueuedRequestsBeforeSending()
+    {
+        $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
+        $client = new Client($this->getServer()->getUrl());
+        $r = $client->get();
+        $r->getEventDispatcher()->addListener('request.before_send', function() use ($client) {
             // Create a request using a queued response
             $client->get()->setResponse(new Response(404), true)->send();
         });
@@ -406,23 +413,13 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase implements Ob
         $this->getServer()->flush();
         $client = new Client($this->getServer()->getUrl());
         $request = $client->get();
-        $request->getEventManager()->attach(function($subject, $event) {
-            if ($event == 'request.before_send') {
-                $subject->setResponse(new Response(200));
-            }
+        $request->getEventDispatcher()->addListener('request.before_send', function(Event $event) {
+            $event['request']->setResponse(new Response(200));
         });
 
         $multi = new CurlMulti();
         $multi->add($request);
         $multi->send();
         $this->assertEquals(0, count($this->getServer()->getReceivedRequests(false)));
-    }
-
-    /**
-     * Logs updates from the multi object
-     */
-    public function update(SubjectInterface $subject, $event, $context = null)
-    {
-        $this->updates->add($event, array($event, $context));
     }
 }

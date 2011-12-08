@@ -3,8 +3,8 @@
 namespace Guzzle\Http;
 
 use Guzzle\Guzzle;
+use Guzzle\Common\HasDispatcherInterface;
 use Guzzle\Common\Collection;
-use Guzzle\Common\Event\SubjectInterface;
 use Guzzle\Common\NullObject;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Curl\CurlHandle;
@@ -15,7 +15,7 @@ use Guzzle\Http\Curl\CurlMultiInterface;
  *
  * @author  michael@guzzlephp.org
  */
-interface ClientInterface extends SubjectInterface
+interface ClientInterface extends HasDispatcherInterface
 {
     /**
      * Set the configuration object to use with the client

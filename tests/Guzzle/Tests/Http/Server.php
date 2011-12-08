@@ -7,7 +7,7 @@ use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\RequestFactory;
-use Guzzle\Service\Client;
+use Guzzle\Http\Client;
 
 /**
  * The Server class is used to control a scripted webserver using node.js that

@@ -53,7 +53,13 @@ class XmlDescriptionBuilder implements DescriptionBuilderInterface
                 $name = (string) $attr->name;
                 $class = (string) $attr->class;
                 if ($name && $class) {
-                    Inspector::getInstance()->registerFilter($name, $class, (string) $attr->default);
+                    $default = array();
+                    foreach ($attr as $key => $value) {
+                        if ($key != 'name' && $key != 'class') {
+                            $default[$key] = (string) $value;
+                        }
+                    }
+                    Inspector::getInstance()->registerConstraint($name, $class, $default);
                 }
             }
         }

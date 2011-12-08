@@ -3,10 +3,9 @@
 namespace Guzzle\Http;
 
 use Guzzle\Guzzle;
+use Guzzle\Common\AbstractHasDispatcher;
 use Guzzle\Common\ExceptionCollection;
 use Guzzle\Common\Collection;
-use Guzzle\Common\Event\ObserverInterface;
-use Guzzle\Common\Event\AbstractSubject;
 use Guzzle\Common\NullObject;
 use Guzzle\Http\Url;
 use Guzzle\Http\EntityBody;
@@ -20,16 +19,10 @@ use Guzzle\Http\Curl\CurlMulti;
 
 /**
  * HTTP client
- *
- * Signals emitted:
- *
- *  event                   context           description
- *  -----                   -------           -----------
- *  request.create          RequestInterface  Created a new request
- *
+ * 
  * @author  michael@guzzlephp.org
  */
-class Client extends AbstractSubject implements ClientInterface
+class Client extends AbstractHasDispatcher implements ClientInterface
 {
     /**
      * @var string Your application's name and version (e.g. MyApp/1.0)
@@ -50,6 +43,14 @@ class Client extends AbstractSubject implements ClientInterface
      * @var CurlMultiInterface CurlMulti object used internally
      */
     private $curlMulti;
+    
+    /**
+     * {@inheritdoc} 
+     */
+    public static function getAllEvents()
+    {
+        return array('client.create_request');
+    }
 
     /**
      * Client constructor
@@ -189,13 +190,15 @@ class Client extends AbstractSubject implements ClientInterface
         }
 
         // Attach client observers to the request
-        $reqManager = $request->getEventManager();
-        $manager = $this->getEventManager();
-        foreach ($manager->getAttached() as $observer) {
-            $reqManager->attach($observer, $manager->getPriority($observer));
-        }
-
-        $manager->notify('request.create', $request);
+        $request->setEventDispatcher(clone $this->getEventDispatcher());
+        $request->dispatch('event.attach', array(
+            'listener' => $request
+        ));
+        
+        $this->dispatch('client.create_request', array(
+            'client'  => $this,
+            'request' => $request
+        ));
 
         return $request;
     }

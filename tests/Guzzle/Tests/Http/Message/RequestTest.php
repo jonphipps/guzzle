@@ -120,14 +120,13 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Message\Request::getEventManager
+     * @covers Guzzle\Http\Message\Request::getEventDispatcher
      */
-    public function testGetEventManager()
+    public function testGetEventDispatcher()
     {
-        $mediator = $this->request->getEventManager();
-        $this->assertInstanceOf('Guzzle\\Common\\Event\\EventManager', $mediator);
-        $this->assertEquals($mediator, $this->request->getEventManager());
-        $this->assertEquals($this->request, $mediator->getSubject());
+        $d = $this->request->getEventDispatcher();
+        $this->assertInstanceOf('Symfony\\Component\\EventDispatcher\\EventDispatcherInterface', $d);
+        $this->assertEquals($d, $this->request->getEventDispatcher());
     }
 
     /**
@@ -552,21 +551,18 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
     public function testClonedRequestsUseNewInternalState()
     {
         $p = new ExponentialBackoffPlugin();
-        $this->request->getEventManager()->attach($p, 100);
+        $this->request->getEventDispatcher()->addSubscriber($p);
 
         $r = clone $this->request;
-
         $this->assertEquals(RequestInterface::STATE_NEW, $r->getState());
         $this->assertNotSame($r->getQuery(), $this->request->getQuery());
         $this->assertNotSame($r->getCurlOptions(), $this->request->getCurlOptions());
-        $this->assertNotSame($r->getEventManager(), $this->request->getEventManager());
+        $this->assertNotSame($r->getEventDispatcher(), $this->request->getEventDispatcher());
         $this->assertNotSame($r->getHeaders(), $this->request->getHeaders());
         $this->assertNotSame($r->getParams(), $this->request->getParams());
         $this->assertNull($r->getParams()->get('queued_response'));
 
-        $this->assertTrue($this->request->getEventManager()->hasObserver($p));
-        $this->assertEquals(100, $r->getEventManager()->getPriority($p));
-        $this->assertTrue($r->getEventManager()->hasObserver($p));
+        $this->assertTrue($this->request->getEventDispatcher()->hasListeners('request.sent'));
     }
 
     /**

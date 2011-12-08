@@ -2,31 +2,19 @@
 
 namespace Guzzle\Http\Curl;
 
+use Guzzle\Common\AbstractHasDispatcher;
 use Guzzle\Common\ExceptionCollection;
-use Guzzle\Common\Event\AbstractSubject;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\RequestException;
 
 /**
  * Execute a pool of {@see RequestInterface} objects in parallel using
- * curl_multi.
- *
- * Signals emitted:
- *
- *  event           context             description
- *  -----           -------             -----------
- *  add_request     RequestInterface    A request was added to the pool
- *  remove_request  RequestInterface    A request was removed from the pool
- *  before_send     array               The pool is about to be sent
- *  complete        array               The pool finished sending the requests
- *  polling_request RequestInterface    A request is still polling
- *  polling         null                Some requests are still polling
- *  exception       RequestException    A request exception occurred
+ * curl_multi
  *
  * @author  michael@guzzlephp.org
  */
-class CurlMulti extends AbstractSubject implements CurlMultiInterface
+class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
 {
     /**
      * @var resource cURL multi handle.
@@ -78,6 +66,29 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
 
         return self::$instance;
     }
+    
+    /**
+     * {@inheritdoc} 
+     */
+    public static function getAllEvents()
+    {
+        return array(
+            // A request was added
+            self::ADD_REQUEST,
+            // A request was removed
+            self::REMOVE_REQUEST,
+            // Requests are about to be sent
+            self::BEFORE_SEND,
+            // The pool finished sending the requests
+            self::COMPLETE,
+            // A request is still polling (sent to request's event dispatchers)
+            self::POLLING_REQUEST,
+            // A request exception occurred
+            'curl_multi.exception',
+            // A curl message was received
+            'curl_multi.message'
+        );
+    }
 
     /**
      * Construct a request pool
@@ -111,7 +122,9 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
             $this->requests[$scope] = array();
         }
         $this->requests[$scope][] = $request;
-        $this->getEventManager()->notify(self::ADD_REQUEST, $request);
+        $this->dispatch(self::ADD_REQUEST, array(
+            'request' => $request
+        ));
         
         if ($this->state == self::STATE_SENDING) {
             $this->beforeSend($request);
@@ -171,7 +184,9 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
             }
         }
         
-        $this->getEventManager()->notify(self::REMOVE_REQUEST, $request);
+        $this->dispatch(self::REMOVE_REQUEST, array(
+            'request' => $request
+        ));
         
         return $this;
     }
@@ -199,20 +214,26 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
      */
     public function send()
     {
+        $this->scope++;
+        
         // Don't prepare for sending again if send() is called while sending
         if ($this->state != self::STATE_SENDING) {
-            $requests = $this->all();
-            $this->getEventManager()->notify(self::BEFORE_SEND, $requests);
-            $this->state = self::STATE_SENDING;
-            foreach ($requests as $request) {
-                if ($request->getState() != RequestInterface::STATE_TRANSFER) {
-                    $this->beforeSend($request);
+            try {
+                $requests = $this->all();
+                $this->dispatch(self::BEFORE_SEND, array(
+                    'requests' => $requests
+                ));
+                $this->state = self::STATE_SENDING;
+                foreach ($requests as $request) {
+                    if ($request->getState() != RequestInterface::STATE_TRANSFER) {
+                        $this->beforeSend($request);
+                    }
                 }
+            } catch (\Exception $e) {
+                $this->exceptions[] = $e;
             }
         }
 
-        $this->scope++;
-        
         try {
             $this->perform();
         } catch (\Exception $e) {
@@ -220,11 +241,11 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
         }
         
         $this->scope--;
-
+        
         // Don't re-complete if another scope already completed the transfers
         if ($this->state !== self::STATE_COMPLETE) {
             $this->state = self::STATE_COMPLETE;
-            $this->getEventManager()->notify(self::COMPLETE);
+            $this->dispatch(self::COMPLETE);
             $this->state = self::STATE_IDLE;
         }
         
@@ -255,15 +276,21 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
      */
     protected function beforeSend(RequestInterface $request)
     {
-        $request->setState(RequestInterface::STATE_TRANSFER);
-        $request->getEventManager()->notify('request.before_send');
-        // Requests might decide they don't need to be sent just before xfer
-        if ($request->getState() != RequestInterface::STATE_TRANSFER) {
-            $this->remove($request);
-        } else if ($request->getParams()->get('queued_response')) {
-            $this->removeQueuedRequest($request);
-        } else {
-            curl_multi_add_handle($this->multiHandle, $this->createCurlHandle($request)->getHandle());
+        try {
+            $request->setState(RequestInterface::STATE_TRANSFER);
+            $request->dispatch('request.before_send', array(
+                'request' => $request
+            ));
+            // Requests might decide they don't need to be sent just before xfer
+            if ($request->getState() != RequestInterface::STATE_TRANSFER) {
+                $this->remove($request);
+            } else if ($request->getParams()->get('queued_response')) {
+                $this->removeQueuedRequest($request);
+            } else {
+                curl_multi_add_handle($this->multiHandle, $this->createCurlHandle($request)->getHandle());
+            }
+        } catch (\Exception $e) {
+            $this->exceptions[] = $e;
         }
     }
 
@@ -303,7 +330,7 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
             
             // Get messages from curl handles
             while ($done = curl_multi_info_read($this->multiHandle)) {
-                $this->getEventManager()->notify('message', $done['result']);
+                $this->dispatch('curl_multi.message', $done);
                 foreach ($this->all() as $request) {
                     $handle = $this->getRequestHandle($request);
                     if ($handle->getHandle() === $done['handle']) {
@@ -312,7 +339,10 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
                         } catch (\Exception $e) {
                             $this->remove($request);
                             $request->setState(RequestInterface::STATE_ERROR);
-                            $this->getEventManager()->notify('exception', $e);
+                            $this->dispatch(self::MULTI_EXCEPTION, array(
+                                'exception' => $e,
+                                'all_exceptions' => $this->exceptions
+                            ));
                             $this->exceptions[] = $e;
                         }
                         break;
@@ -324,11 +354,12 @@ class CurlMulti extends AbstractSubject implements CurlMultiInterface
             $check = $this->scope > 0 ? $this->requests[$this->scope] : $this->all();
             $pendingRequests = !empty($check);
             foreach ($check as $request) {
-                $request->getEventManager()->notify(self::POLLING_REQUEST, $this);
+                $request->dispatch(self::POLLING_REQUEST, array(
+                    'curl_multi' => $this,
+                    'request'    => $request
+                ));
             }
             
-            $this->getEventManager()->notify(self::POLLING, $active);
-
             if ($pendingRequests) {
                 if (!$active) {
                     // Requests are not actually pending a cURL select call, so

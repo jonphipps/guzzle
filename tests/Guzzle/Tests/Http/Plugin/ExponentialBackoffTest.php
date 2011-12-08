@@ -69,7 +69,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
         
         $plugin = new ExponentialBackoffPlugin(2, null, array($this, 'delayClosure'));
         $client = new Client($this->getServer()->getUrl());
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->get();
         $request->send();
 
@@ -98,7 +98,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
         
         $plugin = new ExponentialBackoffPlugin(2, null, array($this, 'delayClosure'));
         $client = new Client($this->getServer()->getUrl());
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->get();
         // This will fail because the plugin isn't retrying the request because
         // the max number of retries is exceeded (1 > 0)
@@ -124,7 +124,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
         });
         
         $client = new Client($this->getServer()->getUrl());
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->get();
         $request->send();
 

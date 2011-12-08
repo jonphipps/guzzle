@@ -3,8 +3,6 @@
 namespace Guzzle\Http\Message;
 
 use Guzzle\Common\Collection;
-use Guzzle\Common\Event\SubjectInterface;
-use Guzzle\Common\Event\ObserverInterface;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\QueryString;
 

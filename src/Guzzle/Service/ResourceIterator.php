@@ -2,25 +2,15 @@
 
 namespace Guzzle\Service;
 
-use Guzzle\Common\Event\AbstractSubject;
+use Guzzle\Common\AbstractHasDispatcher;
 
 /**
  * Iterate over a paginated set of resources that requires subsequent paginated
  * calls in order to retrieve an entire set of resources from a service.
  *
- * Implements Iterator and can be used in a foreach loop.
- * {@link http://www.php.net/manual/en/spl.iterators.php}
- *
- * Signals emitted:
- *
- *  event         context    description
- *  -----         -------    -----------
- *  before_send   array      About to issue another command to get more results
- *  after_send    array      Issued another command to get more results
- *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-abstract class ResourceIterator extends AbstractSubject implements \Iterator, \Countable
+abstract class ResourceIterator extends AbstractHasDispatcher implements \Iterator, \Countable
 {
     /**
      * @var ClientInterface
@@ -71,6 +61,19 @@ abstract class ResourceIterator extends AbstractSubject implements \Iterator, \C
      * @var array Initial data passed to the constructor -- used with rewind()
      */
     protected $data = array();
+    
+    /**
+     * {@inheritdoc} 
+     */
+    public static function getAllEvents()
+    {
+        return array(
+            // About to issue another command to get more results
+            'resource_iterator.before_send',
+            // Issued another command to get more results
+            'resource_iterator.after_send'
+        );
+    }
 
     /**
      * This should only be invoked by a {@see ClientInterface} object.
@@ -186,12 +189,7 @@ abstract class ResourceIterator extends AbstractSubject implements \Iterator, \C
     }
 
     /**
-     * Move forward to next element.
-     *
-     * If a request needs to be sent to retrieve more elements, two events will
-     * be dispatched:
-     *      before_send -- The context will be the currently loaded items
-     *      after_send -- The context will be the newly loaded items
+     * Move forward to next element and may trigger subsequent requests
      */
     public function next()
     {
@@ -201,9 +199,15 @@ abstract class ResourceIterator extends AbstractSubject implements \Iterator, \C
             || ++$this->currentIndex >= count($this->resourceList)
             && $this->nextToken
             && ($this->limit == -1 || $this->pos < $this->limit)) {
-                $this->getEventManager()->notify('before_send', $this->resourceList);
+                $this->dispatch('resource_iterator.before_send', array(
+                    'iterator'  => $this,
+                    'resources' => $this->resourceList
+                ));
                 $this->sendRequest();
-                $this->getEventManager()->notify('after_send', $this->resourceList);
+                $this->dispatch('resource_iterator.after_send', array(
+                    'iterator'  => $this,
+                    'resources' => $this->resourceList
+                ));
         }
 
         $this->current = (array_key_exists($this->currentIndex, $this->resourceList))

@@ -13,3 +13,9 @@
 [submodule "vendor/Zend/Cache"]
 	path = vendor/Zend/Cache
 	url = https://github.com/knplabs/zend-cache.git
+[submodule "vendor/Symfony/Component/EventDispatcher"]
+	path = vendor/Symfony/Component/EventDispatcher
+	url = git://github.com/symfony/EventDispatcher.git
+[submodule "vendor/Symfony/Component/Validator"]
+	path = vendor/Symfony/Component/Validator
+	url = git://github.com/symfony/Validator.git

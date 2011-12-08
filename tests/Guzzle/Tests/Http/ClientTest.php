@@ -30,7 +30,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
             }
         ));
     }
-
+    
     /**
      * @covers Guzzle\Http\Client::getConfig
      * @covers Guzzle\Http\Client::setConfig
@@ -119,21 +119,12 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
 
         $client = new Client($this->getServer()->getUrl());
         $logPlugin = $this->getLogPlugin();
-        $client->getEventManager()->attach($logPlugin);
-
-        // Make sure the plugin was registered correctly
-        $this->assertTrue($client->getEventManager()->hasObserver($logPlugin));
+        $client->getEventDispatcher()->addSubscriber($logPlugin);
 
         // Get a request from the client and ensure the the observer was
         // attached to the new request
         $request = $client->createRequest();
-        $this->assertTrue($request->getEventManager()->hasObserver($logPlugin));
-
-        // Make sure that the log plugin actually logged the request and response
-        ob_start();
-        $request->send();
-        $logged = ob_get_clean();
-        $this->assertContains('"GET / HTTP/1.1" - 200', $logged);
+        $this->assertTrue($this->hasSubscriber($request, $logPlugin));
     }
 
     /**
@@ -206,11 +197,12 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
      */
     public function testPreparesRequestsNotCreatedByTheClient()
     {
+        $exp = new ExponentialBackoffPlugin();
         $client = new Client($this->getServer()->getUrl());
-        $client->getEventManager()->attach(new ExponentialBackoffPlugin());
+        $client->getEventDispatcher()->addSubscriber($exp);
         $request = RequestFactory::create('GET', $client->getBaseUrl());
         $this->assertSame($request, $client->prepareRequest($request));
-        $this->assertTrue($request->getEventManager()->hasObserver('Guzzle\\Http\\Plugin\\ExponentialBackoffPlugin'));
+        $this->assertTrue($this->hasSubscriber($request, $exp));
     }
 
     public function urlProvider()
@@ -373,7 +365,8 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
         $mock->addResponse($responses[0]);
         $mock->addResponse($responses[1]);
         $mock->addResponse($responses[2]);
-        $client->getEventManager()->attach($mock);
+        
+        $client->getEventDispatcher()->addSubscriber($mock);
 
         $requests = array(
             $client->get(),
@@ -397,7 +390,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
         $mock = new MockPlugin();
         $response = new Response(200);
         $mock->addResponse($response);
-        $client->getEventManager()->attach($mock);
+        $client->getEventDispatcher()->addSubscriber($mock);
         $this->assertEquals($response, $client->send($client->get()));
     }
 
@@ -411,7 +404,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
         $mock = new MockPlugin();
         $response = new Response(404);
         $mock->addResponse($response);
-        $client->getEventManager()->attach($mock);
+        $client->getEventDispatcher()->addSubscriber($mock);
         $client->send($client->get());
     }
 
@@ -425,7 +418,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
         $mock = new MockPlugin();
         $mock->addResponse(new Response(200));
         $mock->addResponse(new Response(404));
-        $client->getEventManager()->attach($mock);
+        $client->getEventDispatcher()->addSubscriber($mock);
         $client->send(array($client->get(), $client->head()));
     }
 }

@@ -55,7 +55,7 @@ class XmlDescriptionBuilderTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertEquals('{{ bucket }}/{{ key }}{{ format }}', $command->getPath());
         $this->assertEquals('Documentation', $command->getDoc());
 
-        $this->assertArrayHasKey('custom_filter', Inspector::getInstance()->getRegisteredFilters());
+        $this->assertArrayHasKey('custom_filter', Inspector::getInstance()->getRegisteredConstraints());
     }
 
     /**
@@ -88,7 +88,7 @@ EOT;
         
         $builder = new XmlDescriptionBuilder($xml);
         $service = $builder->build();
-        $this->arrayHasKey('slug', Inspector::getInstance()->getRegisteredFilters());
+        $this->arrayHasKey('slug', Inspector::getInstance()->getRegisteredConstraints());
         $this->assertTrue($service->hasCommand('abstract'));
         $this->assertTrue($service->hasCommand('test1'));
         $this->assertTrue($service->hasCommand('test1'));

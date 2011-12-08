@@ -4,6 +4,7 @@ namespace Guzzle\Tests\Http\Curl;
 
 use Guzzle\Guzzle;
 use Guzzle\Common\Collection;
+use Guzzle\Common\Event;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\QueryString;
 use Guzzle\Http\Client;
@@ -432,20 +433,18 @@ class CurlHandleTest extends \Guzzle\Tests\GuzzleTestCase
         $request = RequestFactory::create('PUT', $this->getServer()->getUrl());
         $request->setClient(new Client());
         $request->setBody(EntityBody::factory('test'), 'text/plain', false);
-
-        $o = new MockObserver();
-        $request->getEventManager()->attach($o);
         
+        $o = $this->getWildcardObserver($request);
         $request->send();
 
         // Make sure that the events were dispatched
-        $this->assertArrayHasKey('curl.callback.read', $o->logByEvent);
-        $this->assertArrayHasKey('curl.callback.write', $o->logByEvent);
-        $this->assertArrayHasKey('curl.callback.progress', $o->logByEvent);
+        $this->assertTrue($o->has('curl.callback.read'));
+        $this->assertTrue($o->has('curl.callback.write'));
+        $this->assertTrue($o->has('curl.callback.progress'));
 
         // Make sure that the data was sent through the event
-        $this->assertEquals('test', $o->logByEvent['curl.callback.read']);
-        $this->assertEquals('hi', $o->logByEvent['curl.callback.write']);
+        $this->assertEquals('test', $o->getData('curl.callback.read', 'read'));
+        $this->assertEquals('hi', $o->getData('curl.callback.write', 'write'));
 
         // Ensure that the request was received exactly as intended
         $r = $this->getServer()->getReceivedRequests(true);

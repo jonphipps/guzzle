@@ -2,21 +2,14 @@
 
 namespace Guzzle\Service;
 
-use Guzzle\Common\Event\AbstractSubject;
+use Guzzle\Common\AbstractHasDispatcher;
 
 /**
  * Apply a callback to the contents of a {@see ResourceIterator}
  *
- * Signals emitted:
- *
- *  event         context  description
- *  -----         -------  -----------
- *  before_batch  array    About to send a batch of requests to the callback
- *  after_batch   array    Finished sending a batch of requests to the callback
- *
  * @author Michael Dowling <michael@guzzlephp.org>
  */
-class ResourceIteratorApplyBatched extends AbstractSubject
+class ResourceIteratorApplyBatched extends AbstractHasDispatcher
 {
     /**
      * @var function|array
@@ -37,6 +30,19 @@ class ResourceIteratorApplyBatched extends AbstractSubject
      * @var int Total number of iterated resources
      */
     protected $iterated = 0;
+    
+    /**
+     * {@inheritdoc}
+     */
+    public static function getAllEvents()
+    {
+        return array(
+            // About to send a batch of requests to the callback
+            'iterator_batch.before_batch',
+            // Finished sending a batch of requests to the callback
+            'iterator_batch.after_batch'
+        );
+    }
 
     /**
      * Constructor
@@ -117,10 +123,18 @@ class ResourceIteratorApplyBatched extends AbstractSubject
     {
         $this->batches++;
 
-        $this->getEventManager()->notify('before_batch', $batch);
+        $this->dispatch('iterator_batch.before_batch', array(
+            'iterator' => $this,
+            'batch'    => $batch
+        ));
+        
         call_user_func_array($this->callback, array(
             $this->iterator, $batch
         ));
-        $this->getEventManager()->notify('after_batch', $batch);
+        
+        $this->dispatch('iterator_batch.after_batch', array(
+            'iterator' => $this,
+            'batch'    => $batch
+        ));
     }
 }

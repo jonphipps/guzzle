@@ -131,7 +131,7 @@ class HistoryPluginTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $h = new HistoryPlugin();
         $client = new Client('http://localhost/');
-        $client->getEventManager()->attach($h);
+        $client->getEventDispatcher()->addSubscriber($h);
 
         $request = $client->get();
         $request->setResponse(new Response(200), true);

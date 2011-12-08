@@ -38,7 +38,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
 
         $this->plugin = new LogPlugin($this->logAdapter);
         $this->client = new Client($this->getServer()->getUrl());
-        $this->client->getEventManager()->attach($this->plugin);
+        $this->client->getEventDispatcher()->addSubscriber($this->plugin);
     }
 
     /**
@@ -104,7 +104,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
 
         $client = new Client($this->getServer()->getUrl());
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS);
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->get();
 
         ob_start();
@@ -136,7 +136,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
 
         $client = new Client($this->getServer()->getUrl());
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS | LogPlugin::LOG_BODY);
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->put('', null, EntityBody::factory('send'));
         
         ob_start();
@@ -168,7 +168,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $client = new Client($this->getServer()->getUrl());
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS | LogPlugin::LOG_BODY);
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->put();
 
         // Send the response from the dummy server as the request body
@@ -209,7 +209,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $client = new Client($this->getServer()->getUrl());
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_VERBOSE);
-        $client->getEventManager()->attach($plugin);
+        $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->get();
 
         $this->getServer()->enqueue("HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n");
@@ -263,7 +263,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
                 echo $message . "\n";
             }
         ), $level);
-        $request->getEventManager()->attach($plugin);
+        $request->getEventDispatcher()->addSubscriber($plugin);
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\nresp");
 
         ob_start();

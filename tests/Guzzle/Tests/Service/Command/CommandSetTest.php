@@ -104,14 +104,14 @@ class CommandSetTest extends AbstractCommandTest
     public function testExecutesCommands()
     {
         $client = $this->getClient();
-        $observer = new MockObserver();
+        $observer = $this->getWildcardObserver($client);
 
         // Create a Mock response
         $response = new Response(200, array(
             'Content-Type' => 'application/xml'
         ), '<xml><data>123</data></xml>');
 
-        $client->getEventManager()->attach(new MockPlugin(array(
+        $client->getEventDispatcher()->addSubscriber(new MockPlugin(array(
             $response,
             $response,
             $response
@@ -126,29 +126,26 @@ class CommandSetTest extends AbstractCommandTest
         $command3->setClient($client);
 
         $commandSet = new CommandSet(array($command1, $command2, $command3));
-        $client->getEventManager()->attach($observer);
         $commandSet->execute();
 
         $this->assertTrue($command1->isExecuted());
-        $this->assertTrue($command2->isExecuted());
-        $this->assertTrue($command3->isExecuted());
         $this->assertTrue($command1->isPrepared());
+        $this->assertTrue($command2->isExecuted());
         $this->assertTrue($command2->isPrepared());
+        $this->assertTrue($command3->isExecuted());
         $this->assertTrue($command3->isPrepared());
 
         $this->assertEquals($response, $command1->getResponse());
         $this->assertEquals($response, $command2->getResponse());
+        
+        $grouped = $observer->getGrouped();
+        $this->assertEquals(3, count($grouped['command.before_send']));
+        $this->assertEquals(3, count($grouped['command.after_send']));
 
-        $this->assertEquals(3, count(array_filter($observer->events, function($e) {
-            return $e == 'command.before_send';
-        })));
-
-        $this->assertEquals(3, count(array_filter($observer->events, function($e) {
-            return $e == 'command.after_send';
-        })));
-
-        // make sure the command set was detached as a listener
-        $this->assertFalse($command1->getRequest()->getEventManager()->hasObserver('Guzzle\\Service\\Command\\CommandSet'));
+        // make sure the command set was detached as a listener on the request
+        $listeners = $command1->getRequest()->getEventDispatcher()->getListeners('request.complete');
+        $this->assertFalse(in_array($commandSet, $listeners));
+        
         // make sure that the command reference was removed
         $this->assertFalse($command1->getRequest()->getParams()->hasKey('command'));
 

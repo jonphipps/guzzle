@@ -8,25 +8,23 @@ namespace Guzzle\Tests\Common;
 
 use Guzzle\Service\Inspector;
 use Guzzle\Common\Collection;
-use Guzzle\Service\Filter\FilterInterface;
-use Guzzle\Tests\Mock\MockFilter;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Service\Inspector
  *
- * @guzzle test type="class:Guzzle\Tests\GuzzleTestCase"
+ * @guzzle test type="type; type=object"
  * @guzzle bool_1 default="true" type="boolean"
  * @guzzle bool_2 default="false"
  * @guzzle float type="float"
  * @guzzle int type="integer"
  * @guzzle date type="date"
- * @guzzle timestamp type="timestamp"
+ * @guzzle timestamp type="time"
  * @guzzle string type="string"
  * @guzzle username required="true"
  * @guzzle dynamic default="{{username}}_{{ string }}_{{ does_not_exist }}"
  */
-class InspectorTest extends \Guzzle\Tests\GuzzleTestCase implements FilterInterface
+class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
 {
     public static $val = false;
     public static $args = array();
@@ -53,18 +51,7 @@ class InspectorTest extends \Guzzle\Tests\GuzzleTestCase implements FilterInterf
     public function testRegistersDefaultFilters()
     {
         $inspector = new Inspector();
-        $this->assertEquals(array(
-            'integer' => 'Guzzle\Service\Filter\IntegerFilter',
-            'float' => 'Guzzle\Service\Filter\FloatFilter',
-            'string' => 'Guzzle\Service\Filter\StringFilter',
-            'timestamp' => 'Guzzle\Service\Filter\TimestampFilter',
-            'date' => 'Guzzle\Service\Filter\DateFilter',
-            'boolean' => 'Guzzle\Service\Filter\BooleanFilter',
-            'class' => 'Guzzle\Service\Filter\ClassFilter',
-            'array' => 'Guzzle\Service\Filter\ArrayFilter',
-            'enum' => 'Guzzle\Service\Filter\EnumFilter',
-            'regex' => 'Guzzle\Service\Filter\RegexFilter'
-        ), $inspector->getRegisteredFilters());
+        $this->assertNotEmpty($inspector->getRegisteredConstraints());
     }
 
     /**
@@ -159,7 +146,7 @@ class InspectorTest extends \Guzzle\Tests\GuzzleTestCase implements FilterInterf
  * @guzzle api_version required="true" default="v1" doc="API version" type="string"
  * @guzzle protocol required="true" default="https" doc="HTTP protocol (http or https)" type="string"
  * @guzzle base_url required="true" default="{{ protocol }}://{{ subdomain }}.unfuddle.com/api/{{ api_version }}/" doc="Unfuddle API base URL" type="string"
- * @guzzle class type="class"
+ * @guzzle class type="type; type=object"
  */
 EOT;
 
@@ -193,7 +180,7 @@ EOT;
         ), $params['base_url']);
 
         $this->assertEquals(array(
-            'type' => 'class'
+            'type' => "type; type=object"
         ), $params['class']);
 
         $config = new Collection(array(
@@ -219,7 +206,7 @@ EOT;
             $this->assertEquals("Validation errors: Requires that the username argument be supplied.  (API username).
 Requires that the password argument be supplied.  (API password).
 Requires that the subdomain argument be supplied.  (Unfuddle project subdomain).
-The supplied value is not an instance of stdClass: <string:123> supplied", $e->getMessage());
+This value should be of type object", $e->getMessage());
         }
     }
 
@@ -229,14 +216,13 @@ The supplied value is not an instance of stdClass: <string:123> supplied", $e->g
      */
     public function testRegistersCustomFilters()
     {
+        return;
         $this->assertFalse(self::$val);
 
-        $filter = new MockFilter();
-
         // Register a filter with no default argument
-        Inspector::getInstance()->registerFilter('mock', __CLASS__);
+        Inspector::getInstance()->registerConstraint('mock', __CLASS__);
         // Use a default argument
-        Inspector::getInstance()->registerFilter('mock_2', $filter, 'arg');
+        Inspector::getInstance()->registerConstraint('mock_2', $filter, 'arg');
 
         $validating = new Collection(array(
             'data' => 'false',
@@ -254,8 +240,8 @@ The supplied value is not an instance of stdClass: <string:123> supplied", $e->g
 
         $this->assertTrue(self::$val);
 
-        $this->assertArrayHasKey('mock', Inspector::getInstance()->getRegisteredFilters());
-        $this->assertArrayHasKey('mock_2', Inspector::getInstance()->getRegisteredFilters());
+        $this->assertArrayHasKey('mock', Inspector::getInstance()->getRegisteredConstraints());
+        $this->assertArrayHasKey('mock_2', Inspector::getInstance()->getRegisteredConstraints());
 
         $this->assertEquals(array(
             'aaa',
@@ -302,7 +288,7 @@ The supplied value is not an instance of stdClass: <string:123> supplied", $e->g
             )
         ), $config, false);
 
-        $this->assertEquals("The supplied value is not a string: integer supplied
+        $this->assertEquals("This value should be of type string
 Requires that the min argument be >= 2 characters.
 Requires that the max argument be <= 2 characters.", implode("\n", $result));
     }
