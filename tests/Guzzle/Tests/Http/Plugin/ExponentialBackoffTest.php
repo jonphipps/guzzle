@@ -66,7 +66,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
 
         // Clear out other requests that have been received by the server
         $this->getServer()->flush();
-        
+
         $plugin = new ExponentialBackoffPlugin(2, null, array($this, 'delayClosure'));
         $client = new Client($this->getServer()->getUrl());
         $client->getEventDispatcher()->addSubscriber($plugin);
@@ -83,7 +83,8 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\ExponentialBackoffPlugin::update
+     * @covers Guzzle\Http\Plugin\ExponentialBackoffPlugin::onRequestSent
+     * @covers Guzzle\Http\Plugin\ExponentialBackoffPlugin::onRequestPoll
      * @covers Guzzle\Http\Message\Request
      * @expectedException Guzzle\Http\Message\BadResponseException
      */
@@ -95,7 +96,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
             "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n",
             "HTTP/1.1 500 Internal Server Error\r\nContent-Length: 0\r\n\r\n"
         ));
-        
+
         $plugin = new ExponentialBackoffPlugin(2, null, array($this, 'delayClosure'));
         $client = new Client($this->getServer()->getUrl());
         $client->getEventDispatcher()->addSubscriber($plugin);
@@ -106,7 +107,8 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\ExponentialBackoffPlugin::update
+     * @covers Guzzle\Http\Plugin\ExponentialBackoffPlugin::onRequestSent
+     * @covers Guzzle\Http\Plugin\ExponentialBackoffPlugin::onRequestPoll
      * @covers Guzzle\Http\Curl\CurlMulti
      */
     public function testRetriesPooledRequestsUsingDelayAndPollingEvent()
@@ -122,7 +124,7 @@ class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $plugin = new ExponentialBackoffPlugin(1, null, function($r) {
             return 1;
         });
-        
+
         $client = new Client($this->getServer()->getUrl());
         $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->get();

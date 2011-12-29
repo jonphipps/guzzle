@@ -32,7 +32,7 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
      * @var Client
      */
     protected $client;
-    
+
     protected function setUp()
     {
         $this->client = new Client($this->getServer()->getUrl());
@@ -59,6 +59,14 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertEquals('GET', $request->getMethod());
         $this->assertEquals('http://www.guzzle-project.com/', $request->getUrl());
         $this->assertEquals('bar', $request->getHeader('foo'));
+    }
+
+    /**
+     * @covers Guzzle\Http\Message\Request::getAllEvents
+     */
+    public function testDescribesEvents()
+    {
+        $this->assertInternalType('array', Request::getAllEvents());
     }
 
     /**
@@ -166,7 +174,7 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
         ), 'abc');
         $this->request->setResponse($response, true);
         $r = $this->request->send();
-        
+
         $this->assertSame($response, $r);
         $this->assertInstanceOf('Guzzle\\Http\\Message\\Response', $this->request->getResponse());
         $this->assertSame($r, $this->request->getResponse());
@@ -182,7 +190,7 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
     public function testGetResponse()
     {
         $this->assertNull($this->request->getResponse());
-        
+
         $response = new Response(200, array(
             'Content-Length' => 3
         ), 'abc');
@@ -276,7 +284,7 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $this->assertEquals('127.0.0.1', $this->request->getHost());
         $this->assertEquals('127.0.0.1:8124', $this->request->getHeader('Host'));
-        
+
         $this->assertSame($this->request, $this->request->setHost('www2.google.com'));
         $this->assertEquals('www2.google.com', $this->request->getHost());
         $this->assertEquals('www2.google.com', $this->request->getHeader('Host'));
@@ -435,7 +443,7 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
         $request->setClient($this->client);
         $request->setResponseBody(EntityBody::factory(fopen($file, 'w+')));
         $request->send();
-        
+
         $this->assertTrue(file_exists($file));
         unlink($file);
 
@@ -509,7 +517,7 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertEquals('abc', $this->request->getCookie('test'));
         $this->assertSame($this->request, $this->request->removeCookie('test'));
         $this->assertNull($this->request->getCookie('test'));
-        
+
         // Remove the cookie header
         $this->assertSame($this->request, $this->request->addCookie('test', 'abc'));
         $this->request->removeHeader('Cookie');
@@ -668,7 +676,7 @@ class RequestTest extends \Guzzle\Tests\GuzzleTestCase
 
         $parts = explode("\r\n", $messages[0]);
         $this->assertEquals('GET / HTTP/1.1', $parts[0]);
-        
+
         $parts = explode("\r\n", $messages[1]);
         $this->assertEquals('GET / HTTP/1.1', $parts[0]);
 

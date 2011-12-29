@@ -8,6 +8,10 @@ namespace Guzzle\Tests\Common;
 
 use Guzzle\Service\Inspector;
 use Guzzle\Common\Collection;
+use Symfony\Component\Validator\ConstraintValidatorFactory;
+use Symfony\Component\Validator\Validator;
+use Symfony\Component\Validator\Mapping\Loader\StaticMethodLoader;
+use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
@@ -26,16 +30,6 @@ use Guzzle\Common\Collection;
  */
 class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
 {
-    public static $val = false;
-    public static $args = array();
-
-    public function process($command)
-    {
-        self::$val = true;
-
-        return true;
-    }
-
     /**
      * @covers Guzzle\Service\Inspector::validateClass
      * @expectedException InvalidArgumentException
@@ -52,6 +46,28 @@ class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $inspector = new Inspector();
         $this->assertNotEmpty($inspector->getRegisteredConstraints());
+    }
+
+    /**
+     * @covers Guzzle\Service\Inspector::getValidator
+     */
+    public function testCreatesDefaultValidator()
+    {
+        $inspector = new Inspector();
+        $this->assertInstanceOf('Symfony\Component\Validator\Validator', $inspector->getValidator());
+    }
+
+    /**
+     * @covers Guzzle\Service\Inspector::setValidator
+     */
+    public function testAllowsValidatorInjection()
+    {
+        $inspector = new Inspector();
+        $default = $inspector->getValidator();
+        $validator = new Validator(new ClassMetadataFactory(new StaticMethodLoader()), new ConstraintValidatorFactory());
+        $inspector->setValidator($validator);
+        $this->assertSame($validator, $inspector->getValidator());
+        $this->assertNotSame($default, $inspector->getValidator());
     }
 
     /**
@@ -100,7 +116,6 @@ class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
 
     /**
      * @covers Guzzle\Service\Inspector::validateClass
-     * @covers Guzzle\Service\Inspector::validate
      * @expectedException InvalidArgumentException
      */
     public function testValidatesTypeHints()
@@ -114,7 +129,6 @@ class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
     /**
      * @covers Guzzle\Service\Inspector::validateClass
      * @covers Guzzle\Service\Inspector::validateConfig
-     * @covers Guzzle\Service\Inspector::validate
      */
     public function testConvertsBooleanDefaults()
     {
@@ -211,41 +225,34 @@ This value should be of type object", $e->getMessage());
     }
 
     /**
-     * @covers Guzzle\Service\Inspector::registerFilter
-     * @covers Guzzle\Service\Inspector::getRegisteredFilters
+     * @covers Guzzle\Service\Inspector::registerConstraint
+     * @covers Guzzle\Service\Inspector::getRegisteredConstraints
      */
     public function testRegistersCustomFilters()
     {
-        return;
-        $this->assertFalse(self::$val);
+        $constraintClass = 'Symfony\\Component\\Validator\\Constraints\\Ip';
 
-        // Register a filter with no default argument
-        Inspector::getInstance()->registerConstraint('mock', __CLASS__);
-        // Use a default argument
-        Inspector::getInstance()->registerConstraint('mock_2', $filter, 'arg');
-
-        $validating = new Collection(array(
-            'data' => 'false',
-            'test' => 'aaa'
+        Inspector::getInstance()->registerConstraint('mock', $constraintClass);
+        Inspector::getInstance()->registerConstraint('mock_2', $constraintClass, array(
+           'version' => '4'
         ));
 
-        Inspector::getInstance()->validateConfig(array(
+        $this->assertArrayHasKey('mock', Inspector::getInstance()->getRegisteredConstraints());
+        $this->assertArrayHasKey('mock_2', Inspector::getInstance()->getRegisteredConstraints());
+
+        $validating = new Collection(array(
+            'data' => '192.168.16.121',
+            'test' => '10.1.1.0'
+        ));
+
+        $this->assertTrue(Inspector::getInstance()->validateConfig(array(
             'data' => array(
                 'type' => 'mock'
             ),
             'test' => array(
                 'type' => 'mock_2'
             )
-        ), $validating);
-
-        $this->assertTrue(self::$val);
-
-        $this->assertArrayHasKey('mock', Inspector::getInstance()->getRegisteredConstraints());
-        $this->assertArrayHasKey('mock_2', Inspector::getInstance()->getRegisteredConstraints());
-
-        $this->assertEquals(array(
-            'aaa',
-        ), $filter->commands);
+        ), $validating, false));
     }
 
     /**

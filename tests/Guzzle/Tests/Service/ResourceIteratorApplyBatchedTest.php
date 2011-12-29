@@ -13,6 +13,14 @@ use Guzzle\Tests\Service\Mock\MockResourceIterator;
 class ResourceIteratorApplyBatchedTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
+     * @covers Guzzle\Service\ResourceIteratorApplyBatched::getAllEvents
+     */
+    public function testDescribesEvents()
+    {
+        $this->assertInternalType('array', ResourceIteratorApplyBatched::getAllEvents());
+    }
+
+    /**
      * @covers Guzzle\Service\ResourceIteratorApplyBatched
      */
     public function testSendsRequestsForNextSetOfResources()

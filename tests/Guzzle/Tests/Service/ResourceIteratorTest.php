@@ -12,6 +12,14 @@ use Guzzle\Tests\Service\Mock\MockResourceIterator;
 class ResourceIteratorTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
+     * @covers Guzzle\Service\ResourceIterator::getAllEvents
+     */
+    public function testDescribesEvents()
+    {
+        $this->assertInternalType('array', ResourceIterator::getAllEvents());
+    }
+
+    /**
       * @covers Guzzle\Service\ResourceIterator
      */
     public function testConstructorConfiguresDefaults()

@@ -14,6 +14,7 @@ use Guzzle\Http\Plugin\LogPlugin;
 /**
  * @group server
  * @author Michael Dowling <michael@guzzlephp.org>
+ * @covers Guzzle\Http\Plugin\LogPlugin
  */
 class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
 {
@@ -51,7 +52,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
     private function parseMessage($message)
     {
         $p = explode(' - ', $message, 4);
-        
+
         $parts['host'] = trim($p[0]);
         $parts['request'] = str_replace('"', '', $p[1]);
         list($parts['code'], $parts['size']) = explode(' ', $p[2]);
@@ -71,10 +72,6 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertEquals($this->logAdapter, $plugin->getLogAdapter());
     }
 
-    /**
-     * @covers Guzzle\Http\Plugin\LogPlugin::update
-     * @covers Guzzle\Http\Plugin\LogPlugin::log
-     */
     public function testLogsRequestAndResponseContext()
     {
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n");
@@ -94,10 +91,6 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertContains('7 guzzle.request', $message);
     }
 
-    /**
-     * @covers Guzzle\Http\Plugin\LogPlugin::update
-     * @covers Guzzle\Http\Plugin\LogPlugin::log
-     */
     public function testLogsRequestAndResponseWireHeaders()
     {
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ndata");
@@ -126,10 +119,6 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertContains("\n< HTTP/1.1 200 OK\r\n< Content-Length: 4", $message);
     }
 
-    /**
-     * @covers Guzzle\Http\Plugin\LogPlugin::update
-     * @covers Guzzle\Http\Plugin\LogPlugin::log
-     */
     public function testLogsRequestAndResponseWireContentAndHeaders()
     {
         $this->getServer()->enqueue("HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ndata");
@@ -138,7 +127,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $plugin = new LogPlugin($this->logAdapter, LogPlugin::LOG_CONTEXT | LogPlugin::LOG_HEADERS | LogPlugin::LOG_BODY);
         $client->getEventDispatcher()->addSubscriber($plugin);
         $request = $client->put('', null, EntityBody::factory('send'));
-        
+
         ob_start();
         $request->send();
         $message = ob_get_clean();
@@ -161,9 +150,6 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertContains("data", $message);
     }
 
-    /**
-     * @covers Guzzle\Http\Plugin\LogPlugin
-     */
     public function testLogsRequestAndResponseWireContentAndHeadersNonStreamable()
     {
         $client = new Client($this->getServer()->getUrl());
@@ -202,9 +188,6 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         unlink($tmpFile);
     }
 
-    /**
-     * @covers Guzzle\Http\Plugin\LogPlugin
-     */
     public function testLogsWhenExceptionsAreThrown()
     {
         $client = new Client($this->getServer()->getUrl());
@@ -249,7 +232,6 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\LogPlugin
      * @dataProvider verbosityProvider
      */
     public function testLogsTransactionsAtDifferentLevels($level, $request)
@@ -257,7 +239,7 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $client = new Client();
         $request = RequestFactory::fromMessage($request);
         $request->setClient($client);
-        
+
         $plugin = new LogPlugin(new ClosureLogAdapter(
             function($message, $priority, $extras = null) {
                 echo $message . "\n";
@@ -269,14 +251,14 @@ class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase
         ob_start();
         $request->send();
         $gen = ob_get_clean();
-        
+
         $parts = explode("\n", trim($gen), 2);
 
         // Check if the context was properly logged
         if ($level & LogPlugin::LOG_CONTEXT) {
             $this->assertContains('127.0.0.1 - "' . $request->getMethod() . ' /', $gen);
         }
-        
+
         // Check if the line count is 1 when just logging the context
         if ($level == LogPlugin::LOG_CONTEXT) {
             $this->assertEquals(1, count($parts));

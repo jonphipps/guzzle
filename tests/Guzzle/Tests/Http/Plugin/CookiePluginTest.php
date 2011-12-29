@@ -45,7 +45,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
                 'ASIHTTPRequestTestCookie=This+is+the+value; expires=Sat, 26-Jul-2008 17:00:42 GMT; path=/tests; domain=allseeing-i.com; PHPSESSID=6c951590e7a9359bcedde25cda73e43c; path=/";',
                 array(
                     'domain' => 'allseeing-i.com',
-                    'path' => '/',                    
+                    'path' => '/',
                     'data' => array(
                         'PHPSESSID' => '6c951590e7a9359bcedde25cda73e43c'
                     ),
@@ -302,7 +302,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
                 foreach ($parsed as $key => $value) {
                     $this->assertEquals($parsed[$key], $p[$key], 'Comparing ' . $key);
                 }
-                
+
                 foreach ($p as $key => $value) {
                     $this->assertEquals($p[$key], $parsed[$key], 'Comparing ' . $key);
                 }
@@ -414,7 +414,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
         unset($result[0]['expires']);
         unset($result[1]['expires']);
         $this->assertEquals($cookie, $result);
-        
+
         // Clear out the currently held cookies
         $this->assertEquals(2, $this->storage->clear());
         $this->assertEquals(0, count($this->storage->getCookies()));
@@ -455,7 +455,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
             'secure' => false,
             'port' => array(8192)
         ));
-        
+
         $request1 = new Request('GET', 'https://a.y.example.com/acme/');
         $request1->setClient(new Client());
         $request2 = new Request('GET', 'https://a.y.example.com/acme/');
@@ -479,7 +479,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
         $request1->setResponse($response1, true);
         $request2->setResponse($response2, true);
         $request3->setResponse($response3, true);
-        
+
         $request1->send();
         $request2->send();
         $request3->send();
@@ -501,7 +501,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
     public function testExtractsMultipleCookies()
     {
         $this->plugin->clearCookies();
-        
+
         $response = Response::factory(
             "HTTP/1.1 200 OK\r\n" .
             "Set-Cookie: IU=deleted; expires=Wed, 03-Mar-2010 02:17:39 GMT; path=/; domain=127.0.0.1\r\n" .
@@ -527,7 +527,7 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
 
         $request->send();
         $this->assertNull($request->getHeader('Cookie'));
-        
+
         $request->setState('new');
         $request->send();
 
@@ -549,7 +549,9 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\CookiePlugin::update
+     * @covers Guzzle\Http\Plugin\CookiePlugin::onRequestSent
+     * @covers Guzzle\Http\Plugin\CookiePlugin::onRequestReceiveStatusLine
+     * @covers Guzzle\Http\Plugin\CookiePlugin::onRequestBeforeSend
      */
     public function testCookiesAreExtractedFromRedirectResponses()
     {
@@ -557,14 +559,14 @@ class CookiePluginTest extends \Guzzle\Tests\GuzzleTestCase
             "HTTP/1.1 302 Moved Temporarily\r\n" .
             "Set-Cookie: test=583551; expires=Wednesday, 23-Mar-2050 19:49:45 GMT; path=/\r\n" .
             "Location: /redirect\r\n\r\n",
-            
+
             "HTTP/1.1 200 OK\r\n" .
             "Content-Length: 0\r\n\r\n",
 
             "HTTP/1.1 200 OK\r\n" .
             "Content-Length: 0\r\n\r\n"
         ));
-        
+
         $client = new Client($this->getServer()->getUrl());
         $client->getEventDispatcher()->addSubscriber($this->plugin);
 

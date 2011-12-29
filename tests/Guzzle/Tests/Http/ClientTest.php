@@ -30,7 +30,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
             }
         ));
     }
-    
+
     /**
      * @covers Guzzle\Http\Client::getConfig
      * @covers Guzzle\Http\Client::setConfig
@@ -54,6 +54,14 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
             $client->setConfig(false);
         } catch (\InvalidArgumentException $e) {
         }
+    }
+
+    /**
+     * @covers Guzzle\Http\Client::getAllEvents
+     */
+    public function testDescribesEvents()
+    {
+        $this->assertEquals(array('client.create_request'), Client::getAllEvents());
     }
 
     /**
@@ -220,7 +228,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
             array($u2, 'relative/path/to/resource?another=query', $this->getServer()->getUrl() . 'base/relative/path/to/resource?z=1&another=query')
         );
     }
-    
+
     /**
      * @dataProvider urlProvider
      * @covers Guzzle\Http\Client::createRequest
@@ -342,7 +350,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
 
         $client = new Client();
         $client->setCurlMulti($mock);
-        
+
         $request = $client->get();
         $request->setResponse(new Response(200), true);
         $client->send($request);
@@ -365,7 +373,7 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
         $mock->addResponse($responses[0]);
         $mock->addResponse($responses[1]);
         $mock->addResponse($responses[2]);
-        
+
         $client->getEventDispatcher()->addSubscriber($mock);
 
         $requests = array(

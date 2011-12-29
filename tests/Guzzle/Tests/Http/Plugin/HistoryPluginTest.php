@@ -37,6 +37,14 @@ class HistoryPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
+     * @covers Guzzle\Http\Plugin\HistoryPlugin::getSubscribedEvents
+     */
+    public function testDescribesSubscribedEvents()
+    {
+        $this->assertInternalType('array', HistoryPlugin::getSubscribedEvents());
+    }
+
+    /**
      * @covers Guzzle\Http\Plugin\HistoryPlugin::getLimit
      * @covers Guzzle\Http\Plugin\HistoryPlugin::setLimit
      */
@@ -124,7 +132,7 @@ class HistoryPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\HistoryPlugin::update
+     * @covers Guzzle\Http\Plugin\HistoryPlugin::onRequestComplete
      * @depends testAddsRequests
      */
     public function testUpdatesAddRequests()

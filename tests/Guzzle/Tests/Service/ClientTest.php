@@ -65,6 +65,14 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
+     * @covers Guzzle\Service\Client::getAllEvents
+     */
+    public function testDescribesEvents()
+    {
+        $this->assertInternalType('array', Client::getAllEvents());
+    }
+
+    /**
      * @covers Guzzle\Service\Client::execute
      */
     public function testExecutesCommands()

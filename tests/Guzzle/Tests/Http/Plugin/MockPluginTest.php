@@ -15,6 +15,22 @@ use Guzzle\Http\Client;
 class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
+     * @covers Guzzle\Http\Plugin\MockPlugin::getSubscribedEvents
+     */
+    public function testDescribesSubscribedEvents()
+    {
+        $this->assertInternalType('array', MockPlugin::getSubscribedEvents());
+    }
+
+    /**
+     * @covers Guzzle\Http\Plugin\MockPlugin::getAllEvents
+     */
+    public function testDescribesEvents()
+    {
+        $this->assertInternalType('array', MockPlugin::getAllEvents());
+    }
+
+    /**
      * @covers Guzzle\Http\Plugin\MockPlugin::__construct
      * @covers Guzzle\Http\Plugin\MockPlugin::isTemporary
      */
@@ -25,7 +41,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $plugin = new MockPlugin(null, true);
         $this->assertTrue($plugin->isTemporary());
     }
-    
+
     /**
      * @covers Guzzle\Http\Plugin\MockPlugin::count
      */
@@ -112,7 +128,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\MockPlugin::update
+     * @covers Guzzle\Http\Plugin\MockPlugin::onRequestCreate
      * @covers Guzzle\Http\Plugin\MockPlugin::addResponse
      * @covers Guzzle\Http\Plugin\MockPlugin::dequeue
      * @depends testAddsResponseFilesToQueue
@@ -133,7 +149,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\MockPlugin::update
+     * @covers Guzzle\Http\Plugin\MockPlugin::onRequestCreate
      * @depends testAddsResponseFilesToQueue
      */
     public function testUpdateIgnoresWhenEmpty()
@@ -143,7 +159,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Plugin\MockPlugin::update
+     * @covers Guzzle\Http\Plugin\MockPlugin::onRequestCreate
      * @covers Guzzle\Http\Plugin\MockPlugin::dequeue
      * @depends testAddsMockResponseToRequestFromClient
      */
@@ -155,7 +171,7 @@ class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
         $client->getEventDispatcher()->addSubscriber($p, 9999);
         $request = $client->get();
         $request->send();
-        
+
         $this->assertFalse($this->hasSubscriber($client, $p));
     }
 
