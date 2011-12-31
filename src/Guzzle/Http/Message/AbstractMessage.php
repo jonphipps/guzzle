@@ -99,17 +99,21 @@ abstract class AbstractMessage implements MessageInterface
     }
 
     /**
-     * Returns TRUE or FALSE if the specified header is present.
+     * Check if the specified header is present.
      *
      * @param string $header The header to check.
      * @param int $match (optional) Match mode
      *
      * @see AbstractMessage::getHeader
-     * @return bool|mixed Returns the matching header or FALSE if no match found
+     * @return bool|mixed Returns TRUE or FALSE if the header is present and using exact matching
+     *     Returns the matching header or FALSE if no match found and using regex or case
+     *     insensitive matching
      */
     public function hasHeader($header, $match = Collection::MATCH_EXACT)
     {
-        return $this->headers->hasKey($header, $match);
+        return $match == Collection::MATCH_EXACT
+            ? false !== $this->headers->hasKey($header, $match)
+            : $this->headers->hasKey($header, $match);
     }
 
     /**
