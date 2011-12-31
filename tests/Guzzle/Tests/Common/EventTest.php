@@ -10,7 +10,7 @@ use Guzzle\Common\Event;
 class EventTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
-     * @return Event 
+     * @return Event
      */
     private function getEvent()
     {
@@ -20,9 +20,9 @@ class EventTest extends \Guzzle\Tests\GuzzleTestCase
             'event' => 'test.notify'
         ));
     }
-    
+
     /**
-     * @covers Guzzle\Common\Event::__construct 
+     * @covers Guzzle\Common\Event::__construct
      */
     public function testAllowsParameterInjection()
     {
@@ -31,7 +31,7 @@ class EventTest extends \Guzzle\Tests\GuzzleTestCase
         ));
         $this->assertEquals('123', $event['test']);
     }
-    
+
     /**
      * @covers Guzzle\Common\Event::offsetGet
      * @covers Guzzle\Common\Event::offsetSet
@@ -43,17 +43,17 @@ class EventTest extends \Guzzle\Tests\GuzzleTestCase
         $event = $this->getEvent();
         $this->assertEquals('123', $event['test']);
         $this->assertNull($event['foobar']);
-        
+
         $this->assertTrue($event->offsetExists('test'));
         $this->assertFalse($event->offsetExists('foobar'));
-        
+
         unset($event['test']);
         $this->assertFalse($event->offsetExists('test'));
-        
+
         $event['test'] = 'new';
         $this->assertEquals('new', $event['test']);
     }
-    
+
     /**
      * @covers Guzzle\Common\Event::getIterator
      */
@@ -61,14 +61,5 @@ class EventTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $event = $this->getEvent();
         $this->assertInstanceOf('ArrayIterator', $event->getIterator());
-    }
-    
-    /**
-     * @covers Guzzle\Common\Event::getEventName
-     */
-    public function testStoresEventName()
-    {
-        $event = $this->getEvent();
-        $this->assertEquals('test.notify', $event->getEventName());
     }
 }

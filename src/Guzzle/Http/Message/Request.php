@@ -26,7 +26,7 @@ class Request extends AbstractMessage implements RequestInterface
      * @var EventDispatcherInterface
      */
     protected $eventDispatcher;
-    
+
     /**
      * @var Url HTTP Url
      */
@@ -81,9 +81,9 @@ class Request extends AbstractMessage implements RequestInterface
      * @var Collection cURL specific transfer options
      */
     protected $curlOptions;
-    
+
     /**
-     * {@inheritdoc} 
+     * {@inheritdoc}
      */
     public static function getAllEvents()
     {
@@ -286,7 +286,7 @@ class Request extends AbstractMessage implements RequestInterface
 
         return $this;
     }
-   
+
     /**
      * Send the request
      *
@@ -323,7 +323,7 @@ class Request extends AbstractMessage implements RequestInterface
      */
     public function getQuery($asString = false)
     {
-        return $asString 
+        return $asString
             ? (string) $this->url->getQuery()
             : $this->url->getQuery();
     }
@@ -786,7 +786,7 @@ class Request extends AbstractMessage implements RequestInterface
         if ($this->method != RequestInterface::GET && $this->method != RequestInterface::HEAD) {
             return false;
         }
-        
+
         // Never cache requests when using no-store
         if ($this->hasCacheControlDirective('no-store')) {
             return false;
@@ -794,7 +794,7 @@ class Request extends AbstractMessage implements RequestInterface
 
         return true;
     }
-    
+
     /**
      * Setting an onComplete method will override the default behavior of
      * throwing an exception when an unsuccessful response is received. The
@@ -816,19 +816,19 @@ class Request extends AbstractMessage implements RequestInterface
         if (!is_callable($callable)) {
             throw new \InvalidArgumentException('onComplete method must be callable');
         }
-        
+
         $this->onComplete = $callable;
 
         return $this;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function setEventDispatcher(EventDispatcherInterface $eventDispatcher)
     {
         $this->eventDispatcher = $eventDispatcher;
-        
+
         return $this;
     }
 
@@ -840,16 +840,15 @@ class Request extends AbstractMessage implements RequestInterface
         if (!$this->eventDispatcher) {
             $this->eventDispatcher = new EventDispatcher();
         }
-        
+
         return $this->eventDispatcher;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function dispatch($eventName, array $context = array())
     {
-        $context['event'] = $eventName;
         $context['request'] = $this;
         $this->getEventDispatcher()->dispatch($eventName, new Event($context));
     }

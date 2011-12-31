@@ -13,56 +13,56 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 class MockObserver implements \Countable, EventSubscriberInterface
 {
     public $events = array();
-    
+
     public static function getSubscribedEvents()
     {
         return array();
     }
-    
+
     public function has($eventName)
     {
         foreach ($this->events as $event) {
-            if ($event->getEventName() == $eventName) {
+            if ($event->getName() == $eventName) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     public function getLastEvent()
     {
         return end($this->events);
     }
-    
+
     public function count()
     {
         return count($this->events);
     }
-    
+
     public function getGrouped()
     {
         $events = array();
         foreach ($this->events as $event) {
-            if (!isset($events[$event->getEventName()])) {
-                $events[$event->getEventName()] = array();
+            if (!isset($events[$event->getName()])) {
+                $events[$event->getName()] = array();
             }
-            $events[$event->getEventName()][] = $event;
+            $events[$event->getName()][] = $event;
         }
-        
+
         return $events;
     }
-    
+
     public function getData($event, $key, $occurence = 0)
     {
         $grouped = $this->getGrouped();
         if (isset($grouped[$event])) {
             return $grouped[$event][$occurence][$key];
         }
-        
+
         return null;
     }
-    
+
     /**
      * {@inheritdoc}
      */

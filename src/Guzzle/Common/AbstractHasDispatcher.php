@@ -14,7 +14,7 @@ class AbstractHasDispatcher implements HasDispatcherInterface
      * @var EventDispatcherInterface
      */
     protected $eventDispatcher;
-    
+
     /**
      * {@inheritdoc}
      */
@@ -22,14 +22,14 @@ class AbstractHasDispatcher implements HasDispatcherInterface
     {
         return array();
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function setEventDispatcher(EventDispatcherInterface $eventDispatcher)
     {
         $this->eventDispatcher = $eventDispatcher;
-        
+
         return $this;
     }
 
@@ -41,16 +41,15 @@ class AbstractHasDispatcher implements HasDispatcherInterface
         if (!$this->eventDispatcher) {
             $this->eventDispatcher = new EventDispatcher();
         }
-        
+
         return $this->eventDispatcher;
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function dispatch($eventName, array $context = array())
     {
-        $context['event'] = $eventName;
         $this->getEventDispatcher()->dispatch($eventName, new Event($context));
     }
 }

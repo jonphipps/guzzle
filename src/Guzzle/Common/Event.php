@@ -5,7 +5,7 @@ namespace Guzzle\Common;
 use Symfony\Component\EventDispatcher\Event as SymfonyEvent;
 
 /**
- * Default event for Guzzle notifications 
+ * Default event for Guzzle notifications
  */
 class Event extends SymfonyEvent implements \ArrayAccess, \IteratorAggregate
 {
@@ -13,17 +13,17 @@ class Event extends SymfonyEvent implements \ArrayAccess, \IteratorAggregate
      * @var array
      */
     private $context;
-    
+
     /**
      * Constructor
-     * 
-     * @param array $context Contextual information 
+     *
+     * @param array $context Contextual information
      */
-    public function __construct(array $context = null)
+    public function __construct(array $context = array())
     {
         $this->context = $context;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -31,7 +31,7 @@ class Event extends SymfonyEvent implements \ArrayAccess, \IteratorAggregate
     {
         return new \ArrayIterator($this->context);
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -39,7 +39,7 @@ class Event extends SymfonyEvent implements \ArrayAccess, \IteratorAggregate
     {
         return array_key_exists($offset, $this->context) ? $this->context[$offset] : null;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -47,7 +47,7 @@ class Event extends SymfonyEvent implements \ArrayAccess, \IteratorAggregate
     {
         $this->context[$offset] = $value;
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -55,22 +55,12 @@ class Event extends SymfonyEvent implements \ArrayAccess, \IteratorAggregate
     {
         return array_key_exists($offset, $this->context);
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function offsetUnset($offset)
     {
         unset($this->context[$offset]);
-    }
-    
-    /**
-     * Get the name of the event
-     * 
-     * @return string 
-     */
-    public function getEventName()
-    {
-        return $this['event'];
     }
 }

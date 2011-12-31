@@ -45,9 +45,9 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
      * @var CurlMulti
      */
     private static $instance;
-    
+
     /**
-     * @var int 
+     * @var int
      */
     private $scope = -1;
 
@@ -66,9 +66,9 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
 
         return self::$instance;
     }
-    
+
     /**
-     * {@inheritdoc} 
+     * {@inheritdoc}
      */
     public static function getAllEvents()
     {
@@ -110,9 +110,9 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
      * Add a request to the pool.
      *
      * @param RequestInterface $request Returns the Request that was added
-     * @param bool $async (optional) Set to TRUE to add to the handle but not 
+     * @param bool $async (optional) Set to TRUE to add to the handle but not
      *      wait on a blocking call
-     * 
+     *
      * @return CurlMutli
      */
     public function add(RequestInterface $request, $async = false)
@@ -125,11 +125,11 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
         $this->dispatch(self::ADD_REQUEST, array(
             'request' => $request
         ));
-        
+
         if ($this->state == self::STATE_SENDING) {
             $this->beforeSend($request);
         }
-        
+
         return $this;
     }
 
@@ -144,7 +144,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
         foreach ($this->requests as $r) {
             $requests = array_merge($requests, $r);
         }
-        
+
         return $requests;
     }
 
@@ -175,7 +175,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
                 $this->removeRequestHandle($request);
             }
         }
-        
+
         foreach ($this->requests as $scope => $requests) {
             foreach ($requests as $i => $r) {
                 if ($r === $request) {
@@ -183,11 +183,11 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
                 }
             }
         }
-        
+
         $this->dispatch(self::REMOVE_REQUEST, array(
             'request' => $request
         ));
-        
+
         return $this;
     }
 
@@ -215,7 +215,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     public function send()
     {
         $this->scope++;
-        
+
         // Don't prepare for sending again if send() is called while sending
         if ($this->state != self::STATE_SENDING) {
             try {
@@ -239,16 +239,16 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
         } catch (\Exception $e) {
             $this->exceptions[] = $e;
         }
-        
+
         $this->scope--;
-        
+
         // Don't re-complete if another scope already completed the transfers
         if ($this->state !== self::STATE_COMPLETE) {
             $this->state = self::STATE_COMPLETE;
             $this->dispatch(self::COMPLETE);
             $this->state = self::STATE_IDLE;
         }
-        
+
         if (!empty($this->exceptions)) {
             $collection = new ExceptionCollection('Errors during multi transfer');
             while ($e = array_shift($this->exceptions)) {
@@ -306,7 +306,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
         $wrapper = CurlHandle::factory($request);
         $this->handles[spl_object_hash($request)] = $wrapper;
         $request->getParams()->set('curl_handle', $wrapper);
-        
+
         return $wrapper;
     }
 
@@ -317,17 +317,17 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     {
         $active = $failedSelects = 0;
         $pendingRequests = !$this->scope ? $this->count() : !empty($this->requests[$this->scope]);
-        
+
         while ($pendingRequests) {
-            
+
             while ($mrc = curl_multi_exec($this->multiHandle, $active) == CURLM_CALL_MULTI_PERFORM);
-            
+
             // @codeCoverageIgnoreStart
             if ($mrc != CURLM_OK) {
                 throw new CurlException('curl_multi_exec returned ' . $mrc);
             }
             // @codeCoverageIgnoreEnd
-            
+
             // Get messages from curl handles
             while ($done = curl_multi_info_read($this->multiHandle)) {
                 $this->dispatch('curl_multi.message', $done);
@@ -349,7 +349,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
                     }
                 }
             }
-            
+
             // Notify each request as polling and handled queued responses
             $check = $this->scope > 0 ? $this->requests[$this->scope] : $this->all();
             $pendingRequests = !empty($check);
@@ -359,7 +359,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
                     'request'    => $request
                 ));
             }
-            
+
             if ($pendingRequests) {
                 if (!$active) {
                     // Requests are not actually pending a cURL select call, so
@@ -369,7 +369,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
                     $select = curl_multi_select($this->multiHandle, 0.3);
                     // Select up to 25 times for a total of 7.5 seconds
                     if (!$select && $this->scope > 0 && ++$failedSelects > 25) {
-                        // There are cases where curl is waiting on a return 
+                        // There are cases where curl is waiting on a return
                         // value from a parent scope in order to remove a curl
                         // handle.  This check will defer to a parent scope for
                         // handling the rest of the connection transfer.
@@ -381,7 +381,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
             }
         }
     }
-    
+
     /**
      * Check for errors and fix headers of a request based on a curl response
      *
@@ -443,9 +443,9 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
                 }
             }
         }
-        
+
         $request->setState(RequestInterface::STATE_COMPLETE);
-        
+
         if ($request->getState() != RequestInterface::STATE_TRANSFER) {
             $this->remove($request);
         }
@@ -476,7 +476,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     private function getRequestHandle(RequestInterface $request)
     {
         $hash = spl_object_hash($request);
-        
+
         return isset($this->handles[$hash]) ? $this->handles[$hash] : null;
     }
 
