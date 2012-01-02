@@ -25,12 +25,12 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
      * @var Guzzle\Http\Curl\CurlMulti
      */
     private $multi;
-    
+
     /**
      * @var Guzzle\Common\Collection
      */
     private $updates;
-    
+
     private $mock;
 
     /**
@@ -170,7 +170,7 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
         $mock1 = $this->getWildcardObserver($request1);
         $request2 = new Request('GET', $this->getServer()->getUrl());
         $mock2 = $this->getWildcardObserver($request2);
-        
+
         $this->multi->add($request1);
         $this->multi->add($request2);
         $this->multi->send();
@@ -277,7 +277,7 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Curl\CurlMulti::removeQueuedRequest
+     * @covers Guzzle\Http\Curl\CurlMulti
      */
     public function testRemovesQueuedRequests()
     {
@@ -292,7 +292,7 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Curl\CurlMulti::removeQueuedRequest
+     * @covers Guzzle\Http\Curl\CurlMulti
      */
     public function testRemovesQueuedRequestsAddedInTransit()
     {
@@ -311,7 +311,7 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
         $r->send();
         $this->assertEquals(1, count($this->getServer()->getReceivedRequests(false)));
     }
-    
+
     /**
      * @covers Guzzle\Http\Curl\CurlMulti
      */
@@ -328,15 +328,15 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
             "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n",
             "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"
         ));
-        
+
         $client = new Client($this->getServer()->getUrl());
-        
+
         $requests = array(
             $client->get(),
             $client->get(),
             $client->get()
         );
-        
+
         $callback = function(Event $event) use ($client) {
             $client->getConfig()->set('called', $client->getConfig('called') + 1);
             $request = $client->get();
@@ -347,18 +347,18 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
             }
             $request->send();
         };
-        
+
         $requests[0]->getEventDispatcher()->addListener('request.complete', $callback);
         $requests[1]->getEventDispatcher()->addListener('request.complete', $callback);
         $requests[2]->getEventDispatcher()->addListener('request.complete', $callback);
-        
+
         $client->send($requests);
-        
+
         $this->assertEquals(8, count($this->getServer()->getReceivedRequests(false)));
     }
 
     /**
-     * @covers Guzzle\Http\Curl\CurlMulti::removeQueuedRequest
+     * @covers Guzzle\Http\Curl\CurlMulti
      * @expectedException Guzzle\Http\Message\BadResponseException
      */
     public function testCatchesExceptionsWhenRemovingQueuedRequests()
@@ -372,9 +372,9 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
         });
         $r->send();
     }
-    
+
     /**
-     * @covers Guzzle\Http\Curl\CurlMulti::removeQueuedRequest
+     * @covers Guzzle\Http\Curl\CurlMulti
      * @expectedException Guzzle\Http\Message\BadResponseException
      */
     public function testCatchesExceptionsWhenRemovingQueuedRequestsBeforeSending()

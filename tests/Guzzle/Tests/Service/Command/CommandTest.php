@@ -19,7 +19,6 @@ class CommandTest extends AbstractCommandTest
     /**
      * @covers Guzzle\Service\Command\AbstractCommand::__construct
      * @covers Guzzle\Service\Command\AbstractCommand::init
-     * @covers Guzzle\Service\Command\AbstractCommand::canBatch
      * @covers Guzzle\Service\Command\AbstractCommand::isPrepared
      * @covers Guzzle\Service\Command\AbstractCommand::isExecuted
      */
@@ -27,7 +26,6 @@ class CommandTest extends AbstractCommandTest
     {
         $command = new MockCommand();
         $this->assertEquals('123', $command->get('test'));
-        $this->assertTrue($command->canBatch());
         $this->assertFalse($command->isPrepared());
         $this->assertFalse($command->isExecuted());
     }
@@ -207,10 +205,8 @@ class CommandTest extends AbstractCommandTest
         $api = new ApiCommand(array(
             'name' => 'foobar',
             'method' => 'POST',
-            'min_args' => 1,
-            'can_batch' => true,
             'class' => 'Guzzle\\Tests\\Service\\Mock\\Command\\MockCommand',
-            'args' => array(
+            'params' => array(
                 'test' => array(
                     'default' => '123',
                     'type' => 'string'

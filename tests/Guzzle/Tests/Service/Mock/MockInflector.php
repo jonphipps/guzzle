@@ -12,9 +12,6 @@ class MockInflector extends \Guzzle\Service\Inflector
      */
     public static function getCache()
     {
-        return array(
-            'snake' => self::$snakeCache,
-            'camel' => self::$camelCache
-        );
+        return self::$cache;
     }
 }

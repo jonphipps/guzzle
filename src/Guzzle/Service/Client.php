@@ -2,20 +2,10 @@
 
 namespace Guzzle\Service;
 
-use Guzzle\Guzzle;
 use Guzzle\Service\Inflector;
-use Guzzle\Service\Inspector;
 use Guzzle\Common\Collection;
 use Guzzle\Common\NullObject;
 use Guzzle\Http\Client as HttpClient;
-use Guzzle\Http\Url;
-use Guzzle\Http\EntityBody;
-use Guzzle\Http\Message\RequestInterface;
-use Guzzle\Http\Message\RequestFactory;
-use Guzzle\Http\Message\Response;
-use Guzzle\Http\Curl\CurlConstants;
-use Guzzle\Http\Curl\CurlMultiInterface;
-use Guzzle\Http\Curl\CurlMulti;
 use Guzzle\Service\Command\CommandInterface;
 use Guzzle\Service\Command\CommandSet;
 use Guzzle\Service\Description\ServiceDescription;
@@ -49,7 +39,7 @@ class Client extends HttpClient implements ClientInterface
     {
         return new self($config['base_url'], $config);
     }
-    
+
     /**
      * {@inheritdoc}
      */
@@ -57,11 +47,11 @@ class Client extends HttpClient implements ClientInterface
     {
         return array_merge(HttpClient::getAllEvents(), array(
             'client.command.create',
-            'command.before_send', 
+            'command.before_send',
             'command.after_send'
         ));
     }
-    
+
     /**
      * Get a command by name.  First, the client will see if it has a service
      * description and if the service description defines a command by the
@@ -112,7 +102,7 @@ class Client extends HttpClient implements ClientInterface
             'client'  => $this,
             'command' => $command
         ));
-        
+
         return $command;
     }
 

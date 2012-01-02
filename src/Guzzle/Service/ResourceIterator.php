@@ -61,9 +61,9 @@ abstract class ResourceIterator extends AbstractHasDispatcher implements \Iterat
      * @var array Initial data passed to the constructor -- used with rewind()
      */
     protected $data = array();
-    
+
     /**
-     * {@inheritdoc} 
+     * {@inheritdoc}
      */
     public static function getAllEvents()
     {
@@ -245,11 +245,11 @@ abstract class ResourceIterator extends AbstractHasDispatcher implements \Iterat
             return $this->pageSize;
         } else if ($this->pos + $this->pageSize > $this->limit) {
             return $this->limit - $this->pos;
-        } else {
-            // @codeCoverageIgnoreStart
-            return $this->pageSize;
-            // @codeCoverageIgnoreEnd
         }
+
+        // @codeCoverageIgnoreStart
+        return $this->pageSize;
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -257,7 +257,5 @@ abstract class ResourceIterator extends AbstractHasDispatcher implements \Iterat
      *
      * Hook for sub-classes to implement.
      */
-    protected function onLoad()
-    {
-    }
+    protected function onLoad() {}
 }

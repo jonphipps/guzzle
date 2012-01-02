@@ -44,18 +44,4 @@ class ClosureCommand extends AbstractCommand
             throw new \UnexpectedValueException('Closure command did not return a RequestInterface object');
         }
     }
-
-    /**
-     * Set whether or not the command can be batched
-     *
-     * @param bool $canBatch Set to TRUE if you can batch this command or FALSE
-     *
-     * @return ClosureCommand
-     */
-    public function setCanBatch($canBatch)
-    {
-        $this->canBatch = (bool) $canBatch;
-
-        return $this;
-    }
 }

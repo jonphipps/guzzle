@@ -26,13 +26,11 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $this->service = new ServiceDescription(
             array(
-                new ApiCommand(array(
-                    'name' => 'test_command',
+                'test_command' => new ApiCommand(array(
                     'doc' => 'documentationForCommand',
                     'method' => 'HEAD',
-                    'can_batch' => true,
                     'path' => '/{{key}}',
-                    'args' => array(
+                    'params' => array(
                         'bucket' => array(
                             'required' => true,
                             'append' => '.',
@@ -51,11 +49,10 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
                         )
                     )
                 )),
-                new ApiCommand(array(
-                    'name' => 'body',
+                'body' => new ApiCommand(array(
                     'doc' => 'doc',
                     'method' => 'PUT',
-                    'args' => array(
+                    'params' => array(
                         'b' => array(
                             'required' => true,
                             'prepend' => 'begin_body::',
@@ -79,10 +76,9 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
                         )
                     )
                 )),
-                new ApiCommand(array(
-                    'name' => 'concrete',
+                'concrete' => new ApiCommand(array(
                     'class' => 'Guzzle\\Tests\\Service\\Mock\\Command\\MockCommand',
-                    'args' => array()
+                    'params' => array()
                 ))
             )
         );
@@ -95,7 +91,7 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $client = new Client('http://www.example.com/');
         $client->setDescription($this->service);
-        
+
         $command = $this->service->createCommand('test_command', array(
             'bucket' => 'test',
             'key' => 'key'
@@ -158,7 +154,7 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
 
         unset($command);
         unset($request);
-        
+
         $command = $this->service->createCommand('body', array(
             'b' => 'my-data',
             'q' => 'abc',
@@ -167,7 +163,7 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
         ));
 
         $request = $command->setClient($client)->prepare();
-        
+
         $this->assertEquals(
             "PUT /?test=abc&i=test HTTP/1.1\r\n" .
             "Host: www.tazmania.com\r\n" .
@@ -195,8 +191,7 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $service = new ServiceDescription(
             array(
-                new ApiCommand(array(
-                    'name' => 'test_path',
+                'test_path' => new ApiCommand(array(
                     'method' => 'GET',
                     'path' => '/test',
                 ))
@@ -217,8 +212,7 @@ class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
     {
         $service = new ServiceDescription(
             array(
-                new ApiCommand(array(
-                    'name' => 'test_path',
+                'test_path' => new ApiCommand(array(
                     'method' => 'GET',
                     'path' => 'test/abc',
                 ))

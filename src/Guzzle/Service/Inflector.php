@@ -18,20 +18,28 @@ class Inflector
     const MAX_ENTRIES_PER_CACHE = 1000;
 
     /**
-     * @var array snake_case transformation cache
+     * @var array
      */
-    protected static $snakeCache = array();
+    protected static $cache = array(
+        'snake' => array(),
+        'camel' => array()
+    );
 
     /**
-     * @var array CamelCase transformation cache
+     * Prune one of the caches
+     *
+     * @param string $cache Name of the cache to prune
      */
-    protected static $camelCache = array();
+    private static function pruneCache($cache)
+    {
+        if (count(self::$cache[$cache]) == self::MAX_ENTRIES_PER_CACHE) {
+            self::$cache[$cache] = array_slice(self::$cache[$cache], self::MAX_ENTRIES_PER_CACHE * 0.1);
+        }
+    }
 
     /**
      * Converts strings from camel case to snake case
-     * (e.g. CamelCase camel_case)
-     *
-     * Borrowed from Magento
+     * (e.g. CamelCase camel_case).
      *
      * @param string $word Word to convert to snake case
      *
@@ -39,22 +47,14 @@ class Inflector
      */
     public static function snake($word)
     {
-        static $cached = 0;
-
-        if (isset(self::$snakeCache[$word])) {
-            return self::$snakeCache[$word];
+        if (isset(self::$cache['snake'][$word])) {
+            return self::$cache['snake'][$word];
         }
 
-        $result = strtolower($word) == $word
+        self::pruneCache('snake');
+
+        return self::$cache['snake'][$word] = strtolower($word) == $word
             ? $word : strtolower(preg_replace('/(.)([A-Z])/', "$1_$2", $word));
-
-        if (++$cached > self::MAX_ENTRIES_PER_CACHE) {
-            $toRemove = self::MAX_ENTRIES_PER_CACHE * 0.1;
-            self::$snakeCache = array_slice(self::$snakeCache, $toRemove);
-            $cached -= $toRemove;
-        }
-
-        return self::$snakeCache[$word] = $result;
     }
 
     /**
@@ -66,20 +66,12 @@ class Inflector
      */
     public static function camel($word)
     {
-        static $cached = 0;
-
-        if (isset(self::$camelCache[$word])) {
-            return self::$camelCache[$word];
+        if (isset(self::$cache['camel'][$word])) {
+            return self::$cache['camel'][$word];
         }
 
-        $result = str_replace(' ', '', ucwords(strtr($word, '_-', '  ')));
+        self::pruneCache('camel');
 
-        if (++$cached > self::MAX_ENTRIES_PER_CACHE) {
-            $toRemove = self::MAX_ENTRIES_PER_CACHE * 0.1;
-            self::$camelCache = array_slice(self::$camelCache, $toRemove);
-            $cached -= $toRemove;
-        }
-
-        return self::$camelCache[$word] = $result;
+        return self::$cache['camel'][$word] = str_replace(' ', '', ucwords(strtr($word, '_-', '  ')));
     }
 }

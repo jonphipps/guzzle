@@ -20,18 +20,4 @@ class MockCommand extends \Guzzle\Service\Command\AbstractCommand
     {
         $this->request = $this->client->createRequest();
     }
-
-    /**
-     * Set whether or not the command can be batched
-     *
-     * @param bool $canBatch
-     *
-     * @return MockCommand
-     */
-    public function setCanBatch($canBatch)
-    {
-        $this->canBatch = $canBatch;
-
-        return $this;
-    }
 }

@@ -40,13 +40,6 @@ interface CommandInterface
     function getApiCommand();
 
     /**
-     * Get whether or not the command can be batched
-     *
-     * @return bool
-     */
-    function canBatch();
-
-    /**
      * Execute the command
      *
      * @return Command

@@ -34,21 +34,6 @@ class ClosureCommandTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Service\Command\ClosureCommand
-     */
-    public function testCanSetCanBatch()
-    {
-        $c = new ClosureCommand(array(
-            'closure' => function() {},
-            'closure_api' => true
-        ));
-
-        $this->assertTrue($c->canBatch());
-        $this->assertSame($c, $c->setCanBatch(false));
-        $this->assertFalse($c->canBatch());
-    }
-
-    /**
      * @covers Guzzle\Service\Command\ClosureCommand::prepare
      * @covers Guzzle\Service\Command\ClosureCommand::build
      */

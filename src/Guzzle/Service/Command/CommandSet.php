@@ -82,18 +82,11 @@ class CommandSet implements \IteratorAggregate, \Countable
             throw $e;
         }
 
-        // Execute all serial commands
-        foreach ($this->getSerialCommands() as $command) {
-            // Execute and then trigger the processing of the command result
-            $command->execute()->getResult();
-        }
-
         // Execute all batched commands in parallel
-        $parallel = $this->getParallelCommands();
-        if (count($parallel)) {
+        if (count($this->commands)) {
             $multis = array();
             // Prepare each request and send out client notifications
-            foreach ($parallel as $command) {
+            foreach ($this->commands as $command) {
                 $request = $command->prepare();
                 $request->getParams()->set('command', $command);
                 $request->getEventDispatcher()->addListener('request.complete', array($this, 'update'), -99999);
@@ -124,27 +117,13 @@ class CommandSet implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Get all of the attached commands that can be sent in parallel
+     * Get all of the attached commands
      *
      * @return array
      */
-    public function getParallelCommands()
+    public function getCommands()
     {
-        return array_values(array_filter($this->commands, function($value) {
-            return true === $value->canBatch();
-        }));
-    }
-
-    /**
-     * Get all of the attached commands that can not be sent in parallel
-     *
-     * @return array
-     */
-    public function getSerialCommands()
-    {
-        return array_values(array_filter($this->commands, function($value) {
-            return false === $value->canBatch();
-        }));
+        return $this->commands;
     }
 
     /**
@@ -180,7 +159,7 @@ class CommandSet implements \IteratorAggregate, \Countable
     }
 
     /**
-     * Trigger the result of the command to be created as commands complete and 
+     * Trigger the result of the command to be created as commands complete and
      * make sure the command isn't going to send more requests
      *
      * {@inheritdoc}

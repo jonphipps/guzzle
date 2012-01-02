@@ -22,7 +22,7 @@ use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
  * annotation.
  *
  * The following is the format for @guzzle arguments:
- * @guzzle argument_name [default="default value"] [required="true|false"] [type="registered constraint name"] [doc="Description of argument"]
+ * @guzzle argument_name [default="default value"] [required="true|false"] [type="registered constraint name"] [type_args=""] [doc="Description of argument"]
  *
  * Here's an example:
  * @guzzle my_argument default="hello" required="true" doc="Set the argument to control the widget..."
@@ -47,7 +47,7 @@ class Inspector
      * @var array Array of aliased constraints
      */
     protected $constraints = array();
-    
+
     /**
      * @var Validator
      */
@@ -105,11 +105,9 @@ class Inspector
         $this->constraints = array(
             'blank'     => array($base . 'Blank', null),
             'not_blank' => array($base . 'NotBlank', null),
-            'not_null'  => array($base . 'NotNull', null),
             'integer'   => array($base . 'Type', array('type' => 'integer')),
             'float'     => array($base . 'Type', array('type' => 'float')),
             'string'    => array($base . 'Type', array('type' => 'string')),
-            'object'    => array($base . 'Type', array('type' => 'object')),
             'date'      => array($base . 'Date', null),
             'date_time' => array($base . 'DateTime', null),
             'time'      => array($base . 'Time', null),
@@ -122,30 +120,32 @@ class Inspector
             'url'       => array($base . 'Url', null),
             'file'      => array($base . 'File', null),
             'image'     => array($base . 'Image', null),
+            'class'     => array($base . 'Type', null),
             'type'      => array($base . 'Type', null),
+            'choice'    => array($base . 'Choice', null),
             'enum'      => array($base . 'Choice', null),
             'regex'     => array($base . 'Regex', null)
         );
     }
-    
+
     /**
      * Set the validator to use with the inspector
-     * 
-     * @param Validator $validator 
-     * 
+     *
+     * @param Validator $validator
+     *
      * @return Inspector
      */
     public function setValidator(Validator $validator)
     {
         $this->validator = $validator;
-        
+
         return $this;
     }
-    
+
     /**
-     * Get the validator associated with the inspector.  A default validator 
+     * Get the validator associated with the inspector.  A default validator
      * will be created if none has already been associated
-     * 
+     *
      * @return Validator
      */
     public function getValidator()
@@ -153,7 +153,7 @@ class Inspector
         if (!$this->validator) {
             $this->validator = new Validator(new ClassMetadataFactory(new StaticMethodLoader()), new ConstraintValidatorFactory());
         }
-        
+
         return $this->validator;
     }
 
@@ -313,48 +313,40 @@ class Inspector
                 $errors[] = 'Requires that the ' . $name . ' argument be <= ' . $arg->get('max_length') . ' characters.';
             }
         }
-        
+
         if (empty($errors)) {
             return true;
-        } else {
-            if ($strict) {
-                throw new \InvalidArgumentException('Validation errors: ' . implode("\n", $errors));
-            } else {
-                return $errors;
-            }
+        } else if ($strict) {
+            throw new \InvalidArgumentException('Validation errors: ' . implode("\n", $errors));
         }
+
+        return $errors;
     }
 
     /**
-     * Get a constraint by name: e.g. "type:{ class: 'Guzzle\Common\Collection' }"
+     * Get a constraint by name: e.g. "type:Guzzle\Common\Collection"
      *
-     * @param string $name Name of the constraint to retrieve.  May contain 
-     *      arguments to pass to the constraint.
-     * 
+     * @param string $name Name of the constraint to retrieve
+     *
      * @return Contraint
      */
-    private function getConstraint($name)
+    public function getConstraint($name)
     {
-        $parts = array_map('trim', explode(';', $name));
+        $parts = array_map('trim', explode(':', $name, 2));
         $name = $parts[0];
 
         if (!isset($this->constraints[$name])) {
             throw new \InvalidArgumentException($name . ' has not been registered');
         }
-        
-        // Use supplied arguments mixed with the default args
-        $args = (array) $this->constraints[$name][1];
-        
-        // JSON params can be passed after the semicolon
+
         if (!empty($parts[1])) {
-            foreach (explode(';', $parts[1]) as $piece) {
-                list($k, $v) = explode('=', $piece);
-                $args[$k] = $v;
-            }
+            $args = strpos($parts[1], ',') ? str_getcsv($parts[1], ',', "'") : $parts[1];
+        } else {
+            $args = $this->constraints[$name][1];
         }
-        
+
         $class = $this->constraints[$name][0];
-        
+
         return new $class($args);
     }
 }

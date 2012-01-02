@@ -1,0 +1,8 @@
+{
+    "types": {},
+    "commands": {
+        "test": {
+            "path": "/path"
+        }
+    }
+}

@@ -40,18 +40,16 @@ class XmlDescriptionBuilderTest extends \Guzzle\Tests\GuzzleTestCase
         $command = $service->getCommand('test');
         $this->assertInstanceOf('Guzzle\\Service\\Description\\ApiCommand', $command);
         $this->assertEquals('test', $command->getName());
-        $this->assertFalse($command->canBatch());
-        $this->assertInternalType('array', $command->getArgs());
+        $this->assertInternalType('array', $command->getParams());
 
         $this->assertEquals(array(
             'name' => 'bucket',
             'required' => true,
             'location' => 'path',
             'doc' => 'Bucket location'
-        ), $command->getArg('bucket')->getAll());
+        ), $command->getParam('bucket')->getAll());
 
         $this->assertEquals('DELETE', $command->getMethod());
-        $this->assertEquals('2', $command->getMinArgs());
         $this->assertEquals('{{ bucket }}/{{ key }}{{ format }}', $command->getPath());
         $this->assertEquals('Documentation', $command->getDoc());
 
@@ -71,7 +69,7 @@ class XmlDescriptionBuilderTest extends \Guzzle\Tests\GuzzleTestCase
         <type name="slug" class="Guzzle.Common.InspectorFilter.Regex" default_args="/[0-9a-zA-z_\-]+/" />
     </types>
     <commands>
-        <command name="abstract" method="GET" path="/path/{{def}}" min_args="2">
+        <command name="abstract" method="GET" path="/path/{{def}}">
             <param name="st" static="static" />
             <param name="def" default="123" location="path" />
         </command>
@@ -85,32 +83,29 @@ class XmlDescriptionBuilderTest extends \Guzzle\Tests\GuzzleTestCase
     </commands>
 </client>
 EOT;
-        
+
         $builder = new XmlDescriptionBuilder($xml);
         $service = $builder->build();
         $this->arrayHasKey('slug', Inspector::getInstance()->getRegisteredConstraints());
         $this->assertTrue($service->hasCommand('abstract'));
         $this->assertTrue($service->hasCommand('test1'));
-        $this->assertTrue($service->hasCommand('test1'));
         $this->assertTrue($service->hasCommand('test2'));
         $this->assertTrue($service->hasCommand('test3'));
-        
+
         $test1 = $service->getCommand('test1');
         $test2 = $service->getCommand('test2');
         $test3 = $service->getCommand('test3');
 
         $this->assertEquals('GET', $test1->getMethod());
         $this->assertEquals('/path/{{def}}', $test1->getPath());
-        $this->assertEquals('2', $test1->getMinArgs());
-        $this->assertEquals('static', $test1->getArg('st')->get('static'));
-        $this->assertEquals('123', $test1->getArg('def')->get('default'));
+        $this->assertEquals('static', $test1->getParam('st')->get('static'));
+        $this->assertEquals('123', $test1->getParam('def')->get('default'));
 
         $this->assertEquals('DELETE', $test2->getMethod());
         $this->assertEquals('/path/{{def}}', $test1->getPath());
-        $this->assertEquals('2', $test1->getMinArgs());
-        $this->assertEquals('static', $test1->getArg('st')->get('static'));
-        $this->assertEquals('123', $test1->getArg('def')->get('default'));
-        $this->assertEquals('header:X-Hd', $test1->getArg('hd')->get('location'));
+        $this->assertEquals('static', $test1->getParam('st')->get('static'));
+        $this->assertEquals('123', $test1->getParam('def')->get('default'));
+        $this->assertEquals('header:X-Hd', $test1->getParam('hd')->get('location'));
 
         $this->assertEquals('', $test3->getMethod());
         $this->assertEquals('Guzzle\Service\Command\ClosureCommand', $test3->getConcreteClass());

@@ -5,9 +5,7 @@ namespace Guzzle\Http;
 use Guzzle\Guzzle;
 use Guzzle\Common\HasDispatcherInterface;
 use Guzzle\Common\Collection;
-use Guzzle\Common\NullObject;
 use Guzzle\Http\Message\RequestInterface;
-use Guzzle\Http\Curl\CurlHandle;
 use Guzzle\Http\Curl\CurlMultiInterface;
 
 /**

@@ -35,17 +35,10 @@ class ArrayCookieJar implements CookieJarInterface
     public function clear($domain = null, $path = null, $name = null)
     {
         $cookies = $this->getCookies($domain, $path, $name, false, false);
-        $total = 0;
-        foreach ($this->cookies as $i => $cookie) {
-            foreach ($cookies as $c) {
-                if ($c === $cookie) {
-                    $total++;
-                    unset($this->cookies[$i]);
-                }
-            }
-        }
 
-        return $total;
+        return $this->prune(function($cookie) use ($cookies) {
+            return !in_array($cookie, $cookies, true);
+        });
     }
 
     /**
@@ -223,7 +216,7 @@ class ArrayCookieJar implements CookieJarInterface
                 unset($this->cookies[$i]);
                 continue;
             }
-            
+
             $alreadyPresent = true;
             break;
         }

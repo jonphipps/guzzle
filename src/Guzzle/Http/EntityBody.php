@@ -17,54 +17,6 @@ class EntityBody extends Stream
     protected $contentEncoding = false;
 
     /**
-     * @var array File types and whether or not they should be Gzipped.
-     */
-    static protected $extensions = array(
-        'avi' => 'video/x-msvideo',
-        'bmp' => 'image/bmp',
-        'bz' => 'application/x-bzip',
-        'bz2' => 'application/x-bzip2',
-        'css' => 'text/css',
-        'doc' => 'application/msword',
-        'exe' => 'application/x-msdownload',
-        'flv' => 'video/x-flv',
-        'gif' => 'image/gif',
-        'gz' => 'application/x-gzip',
-        'htm' => 'text/html',
-        'html' => 'text/html',
-        'ico' => 'image/vnd.microsoft.icon',
-        'ico' => 'image/x-icon',
-        'jpeg' => 'image/jpeg',
-        'jpg' => 'image/jpeg',
-        'js' => 'application/javascript',
-        'json' => 'application/json',
-        'mov' => 'video/quicktime',
-        'mp3' => 'audio/mpeg',
-        'mpeg' => 'video/mpeg',
-        'mpg' => 'video/mpeg',
-        'pdf' => 'application/pdf',
-        'php' => 'text/x-php',
-        'png' => 'image/png',
-        'ppt' => 'application/vnd.ms-powerpoint',
-        'psd' => 'image/vnd.adobe.photoshop',
-        'qt' => 'video/quicktime',
-        'rar' => 'application/x-rar-compressed',
-        'rtf' => 'application/rtf',
-        'svg' => 'image/svg+xml',
-        'svgz' => 'image/svg+xml',
-        'swf' => 'application/x-shockwave-flash',
-        'tar' => 'application/x-tar',
-        'tif' => 'image/tiff',
-        'tiff' => 'image/tiff',
-        'txt' => 'text/plain',
-        'wav' => 'audio/x-wav',
-        'xls' => 'application/vnd.ms-excel',
-        'xml' => 'application/xml',
-        'xsl' => 'application/xsl+xml',
-        'zip' => 'application/zip'
-    );
-
-    /**
      * Create a new EntityBody based on the input type
      *
      * @param resource|string|EntityBody $resource (optional) Entity body data
@@ -84,13 +36,13 @@ class EntityBody extends Stream
             return new self($stream);
         } else if ($resource instanceof self) {
             return $resource;
-        } else {
-            throw new HttpException('Invalid data sent to ' . __METHOD__);
         }
+
+        throw new HttpException('Invalid resource type');
     }
 
     /**
-     * If the stream is readable, compress the data in the stream using deflate 
+     * If the stream is readable, compress the data in the stream using deflate
      * compression.  The uncompressed stream is then closed, and the compressed
      * stream then becomes the wrapped stream.
      *
@@ -101,13 +53,11 @@ class EntityBody extends Stream
     public function compress($filter = 'zlib.deflate')
     {
         $result = $this->handleCompression($filter);
-        if ($result) {
-            $this->contentEncoding = $filter;
-        }
+        $this->contentEncoding = $result ? $filter : false;
 
         return $result;
     }
-    
+
     /**
      * Uncompress a deflated string.  Once uncompressed, the uncompressed
      * string is then used as the wrapped stream.
@@ -150,24 +100,20 @@ class EntityBody extends Stream
     }
 
     /**
-     * Guess the Content-Type of the stream based on the file extension of a
-     * file-based stream
+     * Guess the Content-Type or return the default application/octet-stream
      *
      * @return string
+     * @see http://www.php.net/manual/en/function.finfo-open.php
      */
     public function getContentType()
     {
-        // If the file exists, then detect the mime type using Fileinfo
-        if ($this->isLocal() && $this->getWrapper() == 'plainfile' && file_exists($this->getUri())) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mimeType = finfo_file($finfo, $this->getUri());
-            finfo_close($finfo);
-        } else {
-            $ext = strtoLower(pathInfo($this->getUri(), PATHINFO_EXTENSION));
-            $mimeType = isset(self::$extensions[$ext]) ? self::$extensions[$ext] : 'application/octet-stream';
+        if (!class_exists('finfo', false) || !($this->isLocal() && $this->getWrapper() == 'plainfile' && file_exists($this->getUri()))) {
+            return 'application/octet-stream';
         }
 
-        return $mimeType;
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+
+        return $finfo->file($this->getUri());
     }
 
     /**
@@ -192,7 +138,7 @@ class EntityBody extends Stream
 
         $out = hash_final($ctx, (bool) $rawOutput);
         $this->seek(0);
-        
+
         return ((bool) $base64Encode && (bool) $rawOutput) ? base64_encode($out) : $out;
     }
 
@@ -217,14 +163,10 @@ class EntityBody extends Stream
      */
     public function getContentEncoding()
     {
-        $encoding = $this->contentEncoding;
-        if ($this->contentEncoding == 'zlib.deflate') {
-            $encoding = 'gzip';
-        } else if ($this->contentEncoding == 'bzip2.compress') {
-            $encoding = 'compress';
-        }
-
-        return $encoding;
+        return strtr($this->contentEncoding, array(
+            'zlib.deflate' => 'gzip',
+            'bzip2.compress' => 'compress'
+        )) ?: false;
     }
 
     /**
@@ -261,14 +203,12 @@ class EntityBody extends Stream
         }
 
         fclose($this->stream);
-
-        if ($filter) {
-            stream_filter_remove($filter);
-            $this->stream = $handle;
-        }
-
+        $this->stream = $handle;
+        stream_filter_remove($filter);
         $stat = fstat($this->stream);
         $this->size = $stat['size'];
+        $this->rebuildCache();
+        $this->seek(0);
 
         return true;
     }

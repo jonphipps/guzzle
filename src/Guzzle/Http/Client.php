@@ -6,20 +6,17 @@ use Guzzle\Guzzle;
 use Guzzle\Common\AbstractHasDispatcher;
 use Guzzle\Common\ExceptionCollection;
 use Guzzle\Common\Collection;
-use Guzzle\Common\NullObject;
 use Guzzle\Http\Url;
 use Guzzle\Http\EntityBody;
 use Guzzle\Http\Message\RequestInterface;
 use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\Response;
-use Guzzle\Http\Curl\CurlHandle;
-use Guzzle\Http\Curl\CurlConstants;
 use Guzzle\Http\Curl\CurlMultiInterface;
 use Guzzle\Http\Curl\CurlMulti;
 
 /**
  * HTTP client
- * 
+ *
  * @author  michael@guzzlephp.org
  */
 class Client extends AbstractHasDispatcher implements ClientInterface
@@ -43,9 +40,9 @@ class Client extends AbstractHasDispatcher implements ClientInterface
      * @var CurlMultiInterface CurlMulti object used internally
      */
     private $curlMulti;
-    
+
     /**
-     * {@inheritdoc} 
+     * {@inheritdoc}
      */
     public static function getAllEvents()
     {
@@ -108,11 +105,7 @@ class Client extends AbstractHasDispatcher implements ClientInterface
      */
     public final function getConfig($key = false)
     {
-        if ($key) {
-            return $this->config->get($key);
-        } else {
-            return $this->config;
-        }
+        return $key ? $this->config->get($key) : $this->config;
     }
 
     /**
@@ -174,7 +167,7 @@ class Client extends AbstractHasDispatcher implements ClientInterface
         if ($this->userApplication) {
             $request->setHeader('User-Agent', trim($this->userApplication . ' ' . $request->getHeader('User-Agent')));
         }
-        
+
         // Add any curl options that might in the config to the request
         foreach ($this->getConfig()->getAll('/^curl\..+/', Collection::MATCH_REGEX) as $key => $value) {
             $curlOption = str_replace('curl.', '', $key);
@@ -194,7 +187,7 @@ class Client extends AbstractHasDispatcher implements ClientInterface
         $request->dispatch('event.attach', array(
             'listener' => $request
         ));
-        
+
         $this->dispatch('client.create_request', array(
             'client'  => $this,
             'request' => $request
@@ -346,13 +339,9 @@ class Client extends AbstractHasDispatcher implements ClientInterface
     public function send($requests)
     {
         $curlMulti = $this->getCurlMulti();
-        if (is_array($requests)) {
-            $multipleRequests = true;
-        } else {
-            $requests = array($requests);
-            $multipleRequests = false;
-        }
-        
+        $multipleRequests = is_array($requests);
+        $requests = $multipleRequests ? $requests : array($requests);
+
         foreach ($requests as $request) {
             $curlMulti->add($request);
         }

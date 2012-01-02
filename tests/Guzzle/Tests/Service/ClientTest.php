@@ -29,11 +29,9 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
     public function setUp()
     {
         $this->serviceTest = new ServiceDescription(array(
-            new ApiCommand(array(
-                'name' => 'test_command',
+            'test_command' => new ApiCommand(array(
                 'doc' => 'documentationForCommand',
                 'method' => 'DELETE',
-                'can_batch' => true,
                 'class' => 'Guzzle\\Tests\\Service\\Mock\\Command\\MockCommand',
                 'args' => array(
                     'bucket' => array(

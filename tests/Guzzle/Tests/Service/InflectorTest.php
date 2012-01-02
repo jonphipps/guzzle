@@ -6,12 +6,10 @@ use Guzzle\Tests\Service\Mock\MockInflector as Inflector;
 
 /**
  * @author Michael Dowling <michael@guzzlephp.org>
+ * @covers Guzzle\Service\Inflector
  */
 class InflectorTest extends \Guzzle\Tests\GuzzleTestCase
 {
-    /**
-     * @covers Guzzle\Service\Inflector::snake
-     */
     public function testSnake()
     {
         $this->assertEquals('camel_case', Inflector::snake('camelCase'));
@@ -23,9 +21,6 @@ class InflectorTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertEquals('expect100_continue', Inflector::snake('Expect100Continue'));
     }
 
-    /**
-     * @covers Guzzle\Service\Inflector::camel
-     */
     public function testCamel()
     {
         $this->assertEquals('CamelCase', Inflector::camel('camel_case'));
@@ -37,10 +32,6 @@ class InflectorTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertEquals('Test', Inflector::camel('test', false));
     }
 
-    /**
-     * @covers Guzzle\Service\Inflector::camel
-     * @covers Guzzle\Service\Inflector::snake
-     */
     public function testProtectsAgainstCacheOverflow()
     {
         $perCachePurge = Inflector::MAX_ENTRIES_PER_CACHE * 0.1;

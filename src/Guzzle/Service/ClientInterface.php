@@ -2,12 +2,8 @@
 
 namespace Guzzle\Service;
 
-use Guzzle\Guzzle;
 use Guzzle\Common\Collection;
 use Guzzle\Common\NullObject;
-use Guzzle\Http\Message\RequestInterface;
-use Guzzle\Http\Curl\CurlMultiInterface;
-use Guzzle\Http\Curl\CurlMulti;
 use Guzzle\Http\ClientInterface as HttpClientInterface;
 use Guzzle\Service\Command\CommandInterface;
 use Guzzle\Service\Command\CommandSet;

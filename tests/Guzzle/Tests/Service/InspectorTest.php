@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
  * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Service\Inspector
  *
- * @guzzle test type="type; type=object"
+ * @guzzle test type="type:object"
  * @guzzle bool_1 default="true" type="boolean"
  * @guzzle bool_2 default="false"
  * @guzzle float type="float"
@@ -157,10 +157,10 @@ class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
  * @guzzle username required="true" doc="API username" type="string"
  * @guzzle password required="true" doc="API password" type="string"
  * @guzzle subdomain required="true" doc="Unfuddle project subdomain" type="string"
- * @guzzle api_version required="true" default="v1" doc="API version" type="string"
+ * @guzzle api_version required="true" default="v1" doc="API version" type="choice:'v1','v2',v3"
  * @guzzle protocol required="true" default="https" doc="HTTP protocol (http or https)" type="string"
  * @guzzle base_url required="true" default="{{ protocol }}://{{ subdomain }}.unfuddle.com/api/{{ api_version }}/" doc="Unfuddle API base URL" type="string"
- * @guzzle class type="type; type=object"
+ * @guzzle class type="type:object"
  */
 EOT;
 
@@ -176,7 +176,7 @@ EOT;
             'required' => 'true',
             'default' => 'v1',
             'doc' => 'API version',
-            'type' => 'string'
+            'type' => "choice:'v1','v2',v3"
         ), $params['api_version']);
 
         $this->assertEquals(array(
@@ -194,41 +194,45 @@ EOT;
         ), $params['base_url']);
 
         $this->assertEquals(array(
-            'type' => "type; type=object"
+            'type' => "type:object"
         ), $params['class']);
 
         $config = new Collection(array(
             'username' => 'test',
             'password' => 'pass',
-            'subdomain' => 'sub'
+            'subdomain' => 'sub',
+            'api_version' => 'v2'
         ));
 
         Inspector::getInstance()->validateConfig($params, $config);
 
         // make sure the configs were injected
-        $this->assertEquals('https://sub.unfuddle.com/api/v1/', $config->get('base_url'));
+        $this->assertEquals('https://sub.unfuddle.com/api/v2/', $config->get('base_url'));
 
         try {
             Inspector::getInstance()->validateConfig($params, new Collection(array(
                 'base_url' => '',
                 'username' => '',
                 'password' => '',
-                'class' => '123'
+                'class' => '123',
+                'api_version' => 'v10'
             )));
             $this->fail('Expected exception not thrown when params are invalid');
         } catch (\InvalidArgumentException $e) {
             $this->assertEquals("Validation errors: Requires that the username argument be supplied.  (API username).
 Requires that the password argument be supplied.  (API password).
 Requires that the subdomain argument be supplied.  (Unfuddle project subdomain).
+The value you selected is not a valid choice
 This value should be of type object", $e->getMessage());
         }
     }
 
     /**
      * @covers Guzzle\Service\Inspector::registerConstraint
+     * @covers Guzzle\Service\Inspector::getConstraint
      * @covers Guzzle\Service\Inspector::getRegisteredConstraints
      */
-    public function testRegistersCustomFilters()
+    public function testRegistersCustomConstraints()
     {
         $constraintClass = 'Symfony\\Component\\Validator\\Constraints\\Ip';
 
@@ -239,6 +243,10 @@ This value should be of type object", $e->getMessage());
 
         $this->assertArrayHasKey('mock', Inspector::getInstance()->getRegisteredConstraints());
         $this->assertArrayHasKey('mock_2', Inspector::getInstance()->getRegisteredConstraints());
+
+        $this->assertInstanceOf($constraintClass, Inspector::getInstance()->getConstraint('mock'));
+        $this->assertInstanceOf($constraintClass, Inspector::getInstance()->getConstraint('mock_2'));
+        $this->assertEquals('4', Inspector::getInstance()->getConstraint('mock_2')->version);
 
         $validating = new Collection(array(
             'data' => '192.168.16.121',

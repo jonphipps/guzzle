@@ -12,7 +12,7 @@ use Guzzle\Http\Message\RequestException;
  * Execute a pool of {@see RequestInterface} objects in parallel using
  * curl_multi
  *
- * @author  michael@guzzlephp.org
+ * @author Michael Dowling <michael@guzzlephp.org>
  */
 class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
 {
@@ -91,7 +91,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Construct a request pool
+     * {@inheritdoc}
      */
     public function __construct()
     {
@@ -99,7 +99,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Closes the curl multi handle
+     * {@inheritdoc}
      */
     public function __destruct()
     {
@@ -107,13 +107,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Add a request to the pool.
-     *
-     * @param RequestInterface $request Returns the Request that was added
-     * @param bool $async (optional) Set to TRUE to add to the handle but not
-     *      wait on a blocking call
-     *
-     * @return CurlMutli
+     * {@inheritdoc}
      */
     public function add(RequestInterface $request, $async = false)
     {
@@ -134,24 +128,20 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Get an array of attached {@see RequestInterface}s.
-     *
-     * @return array Returns an array of attached requests.
+     * {@inheritdoc}
      */
     public function all()
     {
         $requests = array();
-        foreach ($this->requests as $r) {
-            $requests = array_merge($requests, $r);
+        foreach ($this->requests as $scopedRequests) {
+            $requests = array_merge($requests, $scopedRequests);
         }
 
         return $requests;
     }
 
     /**
-     * Get the current state of the Pool
-     *
-     * @return string
+     * {@inheritdoc}
      */
     public function getState()
     {
@@ -159,11 +149,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Remove a request from the pool.
-     *
-     * @param RequestInterface $request Request to detach.
-     *
-     * @return CurlMulti
+     * {@inheritdoc}
      */
     public function remove(RequestInterface $request)
     {
@@ -172,13 +158,13 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
             if ($handle instanceof CurlHandle && $handle->getHandle()) {
                 curl_multi_remove_handle($this->multiHandle, $handle->getHandle());
                 $handle->close();
-                $this->removeRequestHandle($request);
+                unset($this->handles[spl_object_hash($request)]);
             }
         }
 
-        foreach ($this->requests as $scope => $requests) {
-            foreach ($requests as $i => $r) {
-                if ($r === $request) {
+        foreach ($this->requests as $scope => $scopedRequests) {
+            foreach ($scopedRequests as $i => $scopedRequest) {
+                if ($scopedRequest === $request) {
                     unset($this->requests[$scope][$i]);
                 }
             }
@@ -192,7 +178,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Reset the state of the Pool and remove any attached RequestInterface objects
+     * {@inheritdoc}
      */
     public function reset()
     {
@@ -206,11 +192,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Execute the curl multi requests.  If you attempt to send() while the
-     * requests are already being sent, FALSE will be returned.
-     *
-     * @throws ExceptionCollection if any requests threw exceptions during the
-     *      transfer.
+     * {@inheritdoc}
      */
     public function send()
     {
@@ -260,9 +242,7 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Get the number of requests in the pool
-     *
-     * @return int
+     * {@inheritdoc}
      */
     public function count()
     {
@@ -285,7 +265,8 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
             if ($request->getState() != RequestInterface::STATE_TRANSFER) {
                 $this->remove($request);
             } else if ($request->getParams()->get('queued_response')) {
-                $this->removeQueuedRequest($request);
+                $this->remove($request);
+                $request->setState(RequestInterface::STATE_COMPLETE);
             } else {
                 curl_multi_add_handle($this->multiHandle, $this->createCurlHandle($request)->getHandle());
             }
@@ -351,9 +332,9 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
             }
 
             // Notify each request as polling and handled queued responses
-            $check = $this->scope > 0 ? $this->requests[$this->scope] : $this->all();
-            $pendingRequests = !empty($check);
-            foreach ($check as $request) {
+            $scopedPolling = $this->scope <= 0 ? $this->all() : $this->requests[$this->scope];
+            $pendingRequests = !empty($scopedPolling);
+            foreach ($scopedPolling as $request) {
                 $request->dispatch(self::POLLING_REQUEST, array(
                     'curl_multi' => $this,
                     'request'    => $request
@@ -452,21 +433,6 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
-     * Remove a request that has a queued response
-     *
-     * @param RequestInterface $request Request to remove
-     */
-    protected function removeQueuedRequest(RequestInterface $request)
-    {
-        try {
-            $this->remove($request);
-            $request->setState(RequestInterface::STATE_COMPLETE);
-        } catch (\Exception $e) {
-            $this->exceptions[] = $e;
-        }
-    }
-
-    /**
      * Get the curl handle associated with a request
      *
      * @param RequestInterface $request Request
@@ -478,18 +444,5 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
         $hash = spl_object_hash($request);
 
         return isset($this->handles[$hash]) ? $this->handles[$hash] : null;
-    }
-
-    /**
-     * Removes a request handle from the cache
-     *
-     * @param RequestInterface $request
-     */
-    private function removeRequestHandle(RequestInterface $request)
-    {
-        $hash = spl_object_hash($request);
-        if (isset($this->handles[$hash])) {
-            unset($this->handles[$hash]);
-        }
     }
 }
