@@ -52,9 +52,7 @@ class ArrayCookieJar implements CookieJarInterface
      */
     public function clearTemporary()
     {
-        $ctime = time();
-
-        return $this->prune(function($cookie) use ($ctime) {
+        return $this->prune(function($cookie) {
             return (!$cookie['discard'] && $cookie['expires']);
         });
     }
@@ -119,7 +117,7 @@ class ArrayCookieJar implements CookieJarInterface
                 if ($domain == $cookie['domain']) {
                     $domainMatch = true;
                 } else if ($cookie['domain'][0] == '.') {
-                    $domainMatch = preg_match('/' . preg_quote($cookie['domain']) . '$/', $domain);
+                    $domainMatch = preg_match('/' . preg_quote($cookie['domain']) . '$/i', $domain);
                 }
             }
 
