@@ -2,8 +2,6 @@
 
 namespace Guzzle\Service;
 
-use Guzzle\Common\Cache\CacheAdapterInterface;
-
 /**
  * Service builder to generate service builders and service clients from
  * configuration settings
@@ -29,9 +27,6 @@ class ServiceBuilder implements \ArrayAccess
      * @param array|string|SimpleXMLElement $data An instantiated
      *      SimpleXMLElement containing configuration data, the full path to an
      *      .xml or .js|.json file, or an associative array of data
-     * @param CacheAdapterInterface $cacheAdapter (optional) Pass a cache
-     *      adapter to cache the computed service configuration settings
-     * @param int $ttl (optional) How long to cache the parsed service data
      * @param string $extension (optional) When passing a string of data to load
      *      from a file, you can set $extension to specify the file type if the
      *      extension is not the standard extension for the file name (e.g. xml,
@@ -41,10 +36,23 @@ class ServiceBuilder implements \ArrayAccess
      * @throws RuntimeException if a file cannot be openend
      * @throws LogicException when trying to extend a missing client
      */
-    public static function factory($data, CacheAdapterInterface $cacheAdapter = null, $ttl = 86400, $extension = null)
+    public static function factory($data, $extension = null)
     {
         $config = array();
         switch (gettype($data)) {
+            case 'string':
+                if (!is_file($data)) {
+                    throw new \RuntimeException('Unable to open service configuration file ' . $data);
+                }
+                $extension = $extension ?: pathinfo($data, PATHINFO_EXTENSION);
+                if ($extension == 'xml') {
+                    $data = new \SimpleXMLElement($data, null, true);
+                } else if ($extension == 'js' || $extension == 'json') {
+                    $config = json_decode(file_get_contents($data), true);
+                } else {
+                    throw new \RuntimeException('Unknown file type ' . $extension);
+                }
+                break;
             case 'array':
                 $config = $data;
                 break;
@@ -52,30 +60,6 @@ class ServiceBuilder implements \ArrayAccess
                 if (!($data instanceof \SimpleXMLElement)) {
                     throw new \InvalidArgumentException('$data must be an instance of SimpleXMLElement');
                 }
-                break;
-            case 'string':
-                if ($cacheAdapter) {
-                    // Compute the cache key for this service and check if it exists in cache
-                    $key = str_replace('__', '_', 'guz_' . preg_replace('~[^\\pL\d]+~u', '_', strtolower(realpath($data))));
-                    if ($cached = $cacheAdapter->fetch($key)) {
-                        return new self(unserialize($cached));
-                    }
-                }
-                if (!is_file($data)) {
-                    throw new \RuntimeException('Unable to open service configuration file ' . $data);
-                }
-                $extension = $extension ?: pathinfo($data, PATHINFO_EXTENSION);
-                switch ($extension) {
-                    case 'xml':
-                        $data = new \SimpleXMLElement($data, null, true);
-                        break;
-                    case 'js': case 'json':
-                        $config = json_decode(file_get_contents($data), true);
-                        break;
-                    default:
-                        throw new \RuntimeException('Unknown file type ' . $extension);
-                }
-                break;
         }
 
         if ($data instanceof \SimpleXMLElement) {
@@ -114,10 +98,6 @@ class ServiceBuilder implements \ArrayAccess
             $client['class'] = str_replace('.', '\\', $client['class']);
         }
 
-        if ($cacheAdapter) {
-            $cacheAdapter->save($key, serialize($config), $ttl);
-        }
-
         return new self($config);
     }
 
@@ -132,6 +112,16 @@ class ServiceBuilder implements \ArrayAccess
     public function __construct(array $serviceBuilderConfig)
     {
         $this->builderConfig = $serviceBuilderConfig;
+    }
+
+    /**
+     * Magic method to allow serialization to support caching
+     *
+     * @return array
+     */
+    public function __sleep()
+    {
+        return array('builderConfig');
     }
 
     /**
@@ -178,30 +168,20 @@ class ServiceBuilder implements \ArrayAccess
      *
      * @param string $offset Name of the client to register
      * @param ClientInterface $value Client to register
-     *
-     * @return ServiceBuilder
      */
     public function offsetSet($offset, $value)
     {
         $this->builderConfig[$offset] = $value;
-
-        return $this;
     }
 
     /**
      * Remove a registered client by name
      *
      * @param string $offset Client to remove by name
-     *
-     * @return ServiceBuilder
      */
     public function offsetUnset($offset)
     {
-        if (isset($this->builderConfig[$offset])) {
-            unset($this->builderConfig[$offset]);
-        }
-
-        return $this;
+        unset($this->builderConfig[$offset]);
     }
 
     /**

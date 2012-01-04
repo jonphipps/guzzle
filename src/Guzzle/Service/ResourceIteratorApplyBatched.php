@@ -30,7 +30,7 @@ class ResourceIteratorApplyBatched extends AbstractHasDispatcher
      * @var int Total number of iterated resources
      */
     protected $iterated = 0;
-    
+
     /**
      * {@inheritdoc}
      */
@@ -73,8 +73,6 @@ class ResourceIteratorApplyBatched extends AbstractHasDispatcher
     {
         if ($this->iterated == 0) {
             $batched = array();
-            $this->iterated = 0;
-
             foreach ($this->iterator as $resource) {
                 $batched[] = $resource;
                 if (count($batched) >= $perBatch) {
@@ -87,8 +85,6 @@ class ResourceIteratorApplyBatched extends AbstractHasDispatcher
             if (count($batched)) {
                 $this->applyBatch($batched);
             }
-
-            unset($batch);
         }
 
         return $this->iterated;
@@ -127,11 +123,11 @@ class ResourceIteratorApplyBatched extends AbstractHasDispatcher
             'iterator' => $this,
             'batch'    => $batch
         ));
-        
+
         call_user_func_array($this->callback, array(
             $this->iterator, $batch
         ));
-        
+
         $this->dispatch('iterator_batch.after_batch', array(
             'iterator' => $this,
             'batch'    => $batch
