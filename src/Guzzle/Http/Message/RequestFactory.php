@@ -41,7 +41,7 @@ class RequestFactory
      * @var string Class to instantiate for POST and PUT requests
      */
     protected static $entityEnclosingRequestClass = 'Guzzle\\Http\\Message\\EntityEnclosingRequest';
-    
+
     /**
      * Parse an HTTP message and return an array of request information
      *
@@ -73,7 +73,7 @@ class RequestFactory
         // Parse each line in the message
         foreach (explode("\r\n", $parts[0]) as $line) {
             $matches = array();
-            if (preg_match('#^(?P<method>GET|POST|PUT|HEAD|DELETE|TRACE|OPTIONS)\s+(?P<path>/.*)\s+(?P<protocol>\w+)/(?P<version>\d\.\d)\s*$#i', $line, $matches)) {
+            if (!$method && preg_match('#^(?P<method>GET|POST|PUT|HEAD|DELETE|TRACE|OPTIONS)\s+(?P<path>/.*)\s+(?P<protocol>\w+)/(?P<version>\d\.\d)\s*$#i', $line, $matches)) {
                 $method = strtoupper($matches['method']);
                 $protocol = strtoupper($matches['protocol']);
                 $path = $matches['path'];
@@ -107,7 +107,7 @@ class RequestFactory
 
         // Check for basic authorization
         $auth = isset($headers['Authorization']) ? $headers['Authorization'] : '';
-        
+
         if ($auth) {
             list($type, $data) = explode(' ', $auth);
             if (strtolower($type) == 'basic') {

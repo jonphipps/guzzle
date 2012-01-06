@@ -43,29 +43,6 @@ class QueryString extends Collection
     protected $aggregator = null;
 
     /**
-     * URL encode a string and convert any special characters as needed.
-     *
-     * @param string $string String to URL encode.
-     * @param array $doNotEncode Array of characters that should not be encoded.
-     *
-     * @return string Returns the encoded string.
-     */
-    public static function rawurlencode($string, array $doNotEncode = null)
-    {
-        $result = rawurlencode($string);
-        if (empty($doNotEncode)) {
-            return $result;
-        } else {
-            $encoded = array();
-            foreach ($doNotEncode as $char) {
-                $encoded[] = rawurlencode($char);
-            }
-
-            return str_replace($encoded, $doNotEncode, $result);
-        }
-    }
-
-    /**
      * Convert the querystring parameters to a querystring string
      *
      * @return string
@@ -75,7 +52,7 @@ class QueryString extends Collection
         if (empty($this->data)) {
             return '';
         }
-        
+
         $queryString = $this->prefix;
         $firstValue = true;
 
@@ -92,7 +69,7 @@ class QueryString extends Collection
                 $firstValue = false;
             }
         }
-        
+
         return $queryString;
     }
 
@@ -120,7 +97,7 @@ class QueryString extends Collection
     {
         return array(
             (($encodeFields) ? rawurlencode($key) : $key) => (($encodeValues)
-                ? implode(',', array_map(array(__CLASS__, 'rawurlencode'), $value))
+                ? implode(',', array_map('rawurlencode', $value))
                 : implode(',', $value))
         );
     }
@@ -186,7 +163,7 @@ class QueryString extends Collection
      *      returns an associative array containing the combined values.  Set
      *      to null to remove any custom aggregator.
      *
-     * @return \Guzzle\Http\QueryString Provides a fluent interface
+     * @return QueryString
      *
      * @see \Guzzle\Http\QueryString::aggregateUsingComma()
      */
@@ -202,12 +179,12 @@ class QueryString extends Collection
      * @param bool $encode Set to TRUE to encode field names, FALSE to not
      *      encode field names
      *
-     * @return \Guzzle\Http\QueryString Provides a fluent interface
+     * @return QueryString
      */
     public function setEncodeFields($encode)
     {
         $this->encodeFields = $encode;
-        
+
         return $this;
     }
 
@@ -218,12 +195,12 @@ class QueryString extends Collection
      * @param bool $encode Set to TRUE to encode field values, FALSE to not
     *       encode field values
      *
-     * @return \Guzzle\Http\QueryString Provides a fluent interface
+     * @return QueryString
      */
     public function setEncodeValues($encode)
     {
         $this->encodeValues = $encode;
-        
+
         return $this;
     }
 
@@ -233,12 +210,12 @@ class QueryString extends Collection
      * @param string $separator The query string separator that will separate
      *      fields
      *
-     * @return \Guzzle\Http\QueryString Provides a fluent interface
+     * @return QueryString
      */
     public function setFieldSeparator($separator)
     {
         $this->fieldSeparator = $separator;
-        
+
         return $this;
     }
 
@@ -247,12 +224,12 @@ class QueryString extends Collection
      *
      * @param string $prefix Prefix to use with the query string (e.g. '?')
      *
-     * @return \Guzzle\Http\QueryString Provides a fluent interface
+     * @return QueryString
      */
     public function setPrefix($prefix)
     {
         $this->prefix = $prefix;
-        
+
         return $this;
     }
 
@@ -262,7 +239,7 @@ class QueryString extends Collection
      * @param string $separator The query string separator that will separate
      *      values from fields
      *
-     * @return \Guzzle\Http\QueryString Provides a fluent interface
+     * @return QueryString
      */
     public function setValueSeparator($separator)
     {
@@ -290,10 +267,8 @@ class QueryString extends Collection
      * aggregator function
      *
      * @param array $data The data to encode
-     * @param bool $encodeFields (optional) Whether or not fields should be
-     *      rawurlencoded
-     * @param bool $encodeValues (optional) Whether or not values should be
-     *      rawurlencoded
+     * @param bool $encodeFields (optional) Toggle URL encoding of fields
+     * @param bool $encodeValues (optional) Toggle URL encoding of values
      *
      * @return array Returns an array of encoded values and keys
      */
@@ -311,7 +286,7 @@ class QueryString extends Collection
                     foreach ($encoded as $i => $v) {
                         $i = (!is_numeric($i)) ? 0 : $i;
                         if ($encodeFields) {
-                            $k = self::rawurlencode($key) . "[{$i}]";
+                            $k = rawurlencode($key) . "[{$i}]";
                         } else {
                             $k = "{$key}[{$i}]";
                         }
@@ -322,10 +297,10 @@ class QueryString extends Collection
             } else {
 
                 if ($encodeValues && is_string($value) || is_numeric($value)) {
-                    $value = self::rawurlencode($value);
+                    $value = rawurlencode($value);
                 }
                 if ($encodeFields) {
-                    $temp[self::rawurlencode($key)] = $value;
+                    $temp[rawurlencode($key)] = $value;
                 } else {
                     $temp[$key] = $value;
                 }

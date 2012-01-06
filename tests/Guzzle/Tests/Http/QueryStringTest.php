@@ -99,7 +99,6 @@ class QueryStringTest extends \Guzzle\Tests\GuzzleTestCase
 
     /**
      * @covers \Guzzle\Http\QueryString::urlEncode
-     * @covers \Guzzle\Http\QueryString::rawUrlEncode
      * @covers \Guzzle\Http\QueryString::encodeData
      * @covers \Guzzle\Http\QueryString::replace
      */
@@ -133,9 +132,6 @@ class QueryStringTest extends \Guzzle\Tests\GuzzleTestCase
         // Disable encoding of both fields and values
         $this->q->setEncodeValues(false);
         $this->assertEquals($testData, $this->q->urlEncode());
-
-
-        $this->assertEquals('one&two%3D', QueryString::rawurlencode('one&two=', array('&')));
     }
 
     /**
