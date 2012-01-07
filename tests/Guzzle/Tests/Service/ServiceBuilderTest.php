@@ -98,7 +98,7 @@ EOT;
     /**
      * @covers Guzzle\Service\ServiceBuilder::factory
      * @expectedException RuntimeException
-     * @expectedExceptionMessage Unable to open service configuration file foobarfile
+     * @expectedExceptionMessage Unable to open foobarfile
      */
     public function testFactoryEnsuresItCanOpenFile()
     {
@@ -295,7 +295,7 @@ EOT;
     /**
      * @covers Guzzle\Service\ServiceBuilder::factory
      * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage $data must be an instance of SimpleXMLElement
+     * @expectedExceptionMessage Must pass a file name, array, or SimpleXMLElement
      */
     public function testFactoryValidatesObjectTypes()
     {

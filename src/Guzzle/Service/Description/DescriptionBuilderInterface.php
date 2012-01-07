@@ -12,7 +12,9 @@ interface DescriptionBuilderInterface
     /**
      * Builds a new ServiceDescription object
      *
+     * @param string $filename File to build
+     *
      * @return ServiceDescription
      */
-    function build();
+    static function build($filename);
 }

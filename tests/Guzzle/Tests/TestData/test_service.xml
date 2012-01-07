@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <client>
+
+    <!-- Include other XML documents -->
+    <includes>
+        <include path="test_service2.xml" />
+    </includes>
+
     <!-- Define custom constraints -->
     <types>
         <type name="custom_filter" class="Symfony.Component.Validator.Constraints.Regex" />
@@ -42,6 +48,8 @@
         </command>
 
         <command name="path" method="GET" path="/test" />
+
+        <command name="concrete" extends="abstract" />
 
     </commands>
 </client>

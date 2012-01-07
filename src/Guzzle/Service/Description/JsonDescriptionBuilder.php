@@ -9,27 +9,32 @@ namespace Guzzle\Service\Description;
  */
 class JsonDescriptionBuilder implements DescriptionBuilderInterface
 {
-    /**
-     * @var string
-     */
-    private $json;
-
-    /**
-     * @param string $filename File to open
-     * @throws RuntimeException
-     */
-    public function __construct($filename)
+    public static function parseJsonFile($jsonFile)
     {
-        if (false === $this->json = file_get_contents($filename)) {
-            throw new \RuntimeException('Error loading data from ' . $filename);
+        if (false === $json = file_get_contents($jsonFile)) {
+            throw new \RuntimeException('Error loading data from ' . $jsonFile);
         }
+
+        $data = json_decode($json, true);
+
+        // Handle includes
+        if (isset($data['includes'])) {
+            foreach ($data['includes'] as $path) {
+                if ($path[0] != DIRECTORY_SEPARATOR) {
+                    $path = dirname($jsonFile) . DIRECTORY_SEPARATOR . $path;
+                }
+                $data = array_merge_recursive(self::parseJsonFile($path), $data);
+            }
+        }
+
+        return $data;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function build()
+    public static function build($filename)
     {
-        return ServiceDescription::factory(json_decode($this->json, true));
+        return ServiceDescription::factory(self::parseJsonFile($filename));
     }
 }
