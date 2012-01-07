@@ -94,9 +94,11 @@ class Guzzle
     public static function inject($input, Collection $config)
     {
         // Skip expensive regular expressions if it isn't needed
-        return strpos($input, '{{') === false
-            ? $input
-            : preg_replace_callback('/{{\s*([A-Za-z_\-\.0-9]+)\s*}}/', function($matches) use ($config) {
+        if (strpos($input, '{{') === false) {
+            return $input;
+        }
+
+        return preg_replace_callback('/{{\s*([A-Za-z_\-\.0-9]+)\s*}}/', function($matches) use ($config) {
                 return $config->get(trim($matches[1]));
             }, $input
         );

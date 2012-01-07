@@ -3,8 +3,6 @@
 namespace Guzzle\Service\Command;
 
 use Guzzle\Common\Event;
-use Guzzle\Http\Curl\CurlMultiInterface;
-use Guzzle\Http\Curl\CurlMulti;
 use Guzzle\Service\ClientInterface;
 use Guzzle\Service\Command\CommandInterface;
 
