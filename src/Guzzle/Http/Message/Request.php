@@ -17,8 +17,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 
 /**
  * HTTP request class to send requests
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Request extends AbstractMessage implements RequestInterface
 {

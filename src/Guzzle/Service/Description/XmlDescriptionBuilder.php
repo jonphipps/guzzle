@@ -4,8 +4,6 @@ namespace Guzzle\Service\Description;
 
 /**
  * Build service descriptions using an XML document
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class XmlDescriptionBuilder implements DescriptionBuilderInterface
 {

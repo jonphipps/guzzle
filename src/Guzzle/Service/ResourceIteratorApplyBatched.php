@@ -6,8 +6,6 @@ use Guzzle\Common\AbstractHasDispatcher;
 
 /**
  * Apply a callback to the contents of a {@see ResourceIterator}
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ResourceIteratorApplyBatched extends AbstractHasDispatcher
 {

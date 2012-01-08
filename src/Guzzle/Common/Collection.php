@@ -4,8 +4,6 @@ namespace Guzzle\Common;
 
 /**
  * Key value pair collection object
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Collection implements \ArrayAccess, \IteratorAggregate, \Countable
 {

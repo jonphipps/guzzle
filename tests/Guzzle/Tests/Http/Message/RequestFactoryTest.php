@@ -11,7 +11,6 @@ use Guzzle\Http\QueryString;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class HttpRequestFactoryTest extends \Guzzle\Tests\GuzzleTestCase
 {

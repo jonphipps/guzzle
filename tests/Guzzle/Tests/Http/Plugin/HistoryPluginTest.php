@@ -9,9 +9,6 @@ use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Plugin\HistoryPlugin;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class HistoryPluginTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

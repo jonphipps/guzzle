@@ -7,8 +7,6 @@ namespace Guzzle\Service;
  *
  * Previously computed values are cached internally using a capped array.  When
  * the cache is filled, the first 10% of the cached array will be removed.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Inflector
 {

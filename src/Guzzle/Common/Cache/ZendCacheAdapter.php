@@ -6,8 +6,6 @@ use Zend\Cache\Backend;
 
 /**
  * ZF1 / ZF2 cache adapter
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ZendCacheAdapter extends AbstractCacheAdapter
 {

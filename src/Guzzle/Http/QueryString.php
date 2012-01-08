@@ -7,8 +7,6 @@ use Guzzle\Common\Collection;
 /**
  * Query string object to handle managing query string parameters and
  * aggregating those parameters together as a string.
- *
- * @author  michael@guzzlephp.org
  */
 class QueryString extends Collection
 {

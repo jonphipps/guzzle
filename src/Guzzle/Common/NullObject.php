@@ -4,8 +4,6 @@ namespace Guzzle\Common;
 
 /**
  * Implements the NULL Object design pattern for generic objects.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class NullObject implements \Iterator, \Countable, \ArrayAccess
 {

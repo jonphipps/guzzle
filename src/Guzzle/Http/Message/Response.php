@@ -8,8 +8,6 @@ use Guzzle\Http\HttpException;
 
 /**
  * Guzzle HTTP response object
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Response extends AbstractMessage
 {

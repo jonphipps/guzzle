@@ -13,8 +13,6 @@ use Guzzle\Service\ClientInterface;
 /**
  * Command object to handle preparing and processing client requests and
  * responses of the requests
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 abstract class AbstractCommand extends Collection implements CommandInterface
 {

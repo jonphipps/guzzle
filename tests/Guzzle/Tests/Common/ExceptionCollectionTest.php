@@ -4,9 +4,6 @@ namespace Guzzle\Tests\Common;
 
 use Guzzle\Common\ExceptionCollection;
 
-/**
- * @covers Guzzle\Common\ExceptionCollection
- */
 class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
 {
     private function getExceptions()

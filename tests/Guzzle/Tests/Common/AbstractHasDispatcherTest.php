@@ -6,9 +6,6 @@ use Guzzle\Common\Event;
 use Guzzle\Common\AbstractHasDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class AbstractHasAdapterTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

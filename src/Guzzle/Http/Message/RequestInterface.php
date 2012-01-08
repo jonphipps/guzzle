@@ -10,8 +10,6 @@ use Guzzle\Http\Cookie;
 
 /**
  * Generic HTTP request interface
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 interface RequestInterface extends MessageInterface, HasDispatcherInterface
 {

@@ -13,8 +13,6 @@ use Guzzle\Service\Command\ClosureCommand;
 /**
  * Build Guzzle commands based on a service document using dynamically created
  * commands to implement a service document's specifications.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class DynamicCommandFactory implements CommandFactoryInterface
 {

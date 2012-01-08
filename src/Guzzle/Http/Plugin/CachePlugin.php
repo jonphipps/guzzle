@@ -17,8 +17,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * resources with cacheable response headers.  This is a simple implementation
  * of RFC 2616 and should be considered a private transparent proxy cache
  * (authorization and private data can be cached).
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class CachePlugin implements EventSubscriberInterface
 {

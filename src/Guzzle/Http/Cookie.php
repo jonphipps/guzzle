@@ -7,8 +7,6 @@ use Guzzle\Common\Collection;
 /**
  * Cookie contains cookies and allows the easy access, removal, and
  * string representation of HTTP cookies that will be sent in an HTTP request.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Cookie extends QueryString
 {

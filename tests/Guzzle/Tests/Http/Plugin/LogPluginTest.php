@@ -13,7 +13,6 @@ use Guzzle\Http\Plugin\LogPlugin;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Http\Plugin\LogPlugin
  */
 class LogPluginTest extends \Guzzle\Tests\GuzzleTestCase

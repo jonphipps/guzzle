@@ -6,8 +6,6 @@ use Guzzle\Common\Collection;
 
 /**
  * Request and response message interface
- * 
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 interface MessageInterface
 {

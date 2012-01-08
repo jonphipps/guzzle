@@ -6,9 +6,6 @@ use Guzzle\Guzzle;
 use Guzzle\Http\CookieJar\ArrayCookieJar;
 use Guzzle\Http\CookieJar\CookieJarInterface;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class ArrayCookieJarTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

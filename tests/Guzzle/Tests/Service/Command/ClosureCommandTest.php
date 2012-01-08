@@ -6,9 +6,6 @@ use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Service\Command\ClosureCommand;
 use Guzzle\Service\Client;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class ClosureCommandTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

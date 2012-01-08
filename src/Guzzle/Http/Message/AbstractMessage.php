@@ -7,8 +7,6 @@ use Guzzle\Common\Collection;
 /**
  * HTTP messages consist of request messages that request data from a server,
  * and response messages that carry back data from the server to the client.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 abstract class AbstractMessage implements MessageInterface
 {

@@ -15,8 +15,6 @@ use Guzzle\Http\Url;
  * If you need to extend the Request or EntityEnclosingRequest classes, then
  * this default factory implementation will not work for your client, though
  * you can extend this class with your custom factory.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class RequestFactory
 {

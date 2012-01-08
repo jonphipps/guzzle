@@ -11,8 +11,6 @@ use Guzzle\Service\Description\ServiceDescription;
 
 /**
  * Client interface for executing commands on a web service.
- *
- * @author  michael@guzzlephp.org
  */
 interface ClientInterface extends HttpClientInterface
 {

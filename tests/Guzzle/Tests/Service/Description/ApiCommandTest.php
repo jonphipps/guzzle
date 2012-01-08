@@ -6,9 +6,6 @@ use Guzzle\Common\Collection;
 use Guzzle\Service\Description\ApiCommand;
 use Guzzle\Service\Description\ServiceDescription;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class ApiCommandTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

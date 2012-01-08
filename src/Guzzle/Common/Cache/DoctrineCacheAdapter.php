@@ -8,7 +8,6 @@ use Doctrine\Common\Cache\Cache;
  * Doctrine 2 cache adapter
  *
  * @link   http://www.doctrine-project.org/
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class DoctrineCacheAdapter extends AbstractCacheAdapter
 {

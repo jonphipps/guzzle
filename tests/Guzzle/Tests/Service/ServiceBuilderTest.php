@@ -5,9 +5,6 @@ namespace Guzzle\Tests\Service;
 use Guzzle\Service\ServiceBuilder;
 use Guzzle\Service\Client;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class ServiceBuilderTest extends \Guzzle\Tests\GuzzleTestCase
 {
     protected $xmlConfig;

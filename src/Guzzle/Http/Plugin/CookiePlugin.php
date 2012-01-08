@@ -10,8 +10,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Adds, extracts, and persists cookies between HTTP requests
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class CookiePlugin implements EventSubscriberInterface
 {

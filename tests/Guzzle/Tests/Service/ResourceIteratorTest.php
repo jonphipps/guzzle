@@ -7,7 +7,6 @@ use Guzzle\Tests\Service\Mock\MockResourceIterator;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ResourceIteratorTest extends \Guzzle\Tests\GuzzleTestCase
 {

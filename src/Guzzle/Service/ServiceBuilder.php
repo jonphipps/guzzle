@@ -5,8 +5,6 @@ namespace Guzzle\Service;
 /**
  * Service builder to generate service builders and service clients from
  * configuration settings
- *
- * @author  michael@guzzlephp.org
  */
 class ServiceBuilder implements \ArrayAccess
 {

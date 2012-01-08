@@ -6,8 +6,6 @@ use Guzzle\Http\HttpException;
 
 /**
  * Http request exception
- *
- * @author  michael@guzzlephp.org
  */
 class RequestException extends HttpException
 {

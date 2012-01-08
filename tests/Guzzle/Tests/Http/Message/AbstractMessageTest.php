@@ -7,9 +7,6 @@ use Guzzle\Http\Message\Request;
 use Guzzle\Common\Collection;
 use Guzzle\Http\Message\Response;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class AbstractMessageTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

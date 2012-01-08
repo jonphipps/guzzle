@@ -4,8 +4,6 @@ namespace Guzzle\Service\Description;
 
 /**
  * Build service descriptions using a JSON document
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class JsonDescriptionBuilder implements DescriptionBuilderInterface
 {

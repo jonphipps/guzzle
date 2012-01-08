@@ -4,8 +4,6 @@ namespace Guzzle\Common;
 
 /**
  * Collection of exceptions
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ExceptionCollection extends \Exception implements GuzzleExceptionInterface, \IteratorAggregate, \Countable
 {

@@ -26,8 +26,6 @@ use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
  *
  * Here's an example:
  * @guzzle my_argument default="hello" required="true" doc="Set the argument to control the widget..."
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Inspector
 {

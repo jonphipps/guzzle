@@ -7,8 +7,6 @@ use Guzzle\Service\Client;
 
 /**
  * Mock Guzzle Service
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class MockClient extends Client
 {

@@ -12,14 +12,11 @@ use Guzzle\Http\Message\RequestFactory;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ResponseTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
-     * The response object to test
-     *
-     * @var Guzzle\Http\Message\Response
+     * @var Response The response object to test
      */
     protected $response;
 

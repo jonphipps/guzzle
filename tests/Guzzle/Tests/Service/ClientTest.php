@@ -19,7 +19,6 @@ use Guzzle\Tests\Service\Mock\Command\MockCommand;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ClientTest extends \Guzzle\Tests\GuzzleTestCase
 {

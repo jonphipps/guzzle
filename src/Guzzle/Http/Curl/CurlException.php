@@ -6,8 +6,6 @@ use Guzzle\Http\Message\BadResponseException;
 
 /**
  * cURL request exception
- *
- * @author  michael@guzzlephp.org
  */
 class CurlException extends BadResponseException
 {

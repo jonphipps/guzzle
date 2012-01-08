@@ -22,8 +22,6 @@ use Guzzle\Http\Client;
  * HTTP request using cURL.  This test server allows the simulation of any
  * number of HTTP request response transactions to test the actual sending of
  * requests over the wire without having to leave an internal network.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Server
 {

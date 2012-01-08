@@ -7,9 +7,6 @@ use Guzzle\Common\Event\EventManager;
 use Guzzle\Common\Event\ObserverInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class MockObserver implements \Countable, EventSubscriberInterface
 {
     public $events = array();

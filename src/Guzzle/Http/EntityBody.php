@@ -6,8 +6,6 @@ use Guzzle\Common\Stream;
 
 /**
  * Entity body used with an HTTP request or response
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class EntityBody extends Stream
 {

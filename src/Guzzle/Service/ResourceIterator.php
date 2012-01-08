@@ -7,8 +7,6 @@ use Guzzle\Common\AbstractHasDispatcher;
 /**
  * Iterate over a paginated set of resources that requires subsequent paginated
  * calls in order to retrieve an entire set of resources from a service.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 abstract class ResourceIterator extends AbstractHasDispatcher implements \Iterator, \Countable
 {

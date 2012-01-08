@@ -1,8 +1,4 @@
 <?php
-/**
- * @pakage Guzzle PHP <http://www.guzzlephp.org>
- * @license See the LICENSE file that was distributed with this source code.
- */
 
 namespace Guzzle\Tests\Common;
 
@@ -14,7 +10,6 @@ use Symfony\Component\Validator\Mapping\Loader\StaticMethodLoader;
 use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
 
 /**
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Service\Inspector
  *
  * @guzzle test type="type:object"
@@ -157,8 +152,6 @@ class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
         $doc = <<<EOT
 /**
  * Client for interacting with the Unfuddle webservice
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  *
  * @guzzle username required="true" doc="API username" type="string"
  * @guzzle password required="true" doc="API password" type="string"

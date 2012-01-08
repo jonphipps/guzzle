@@ -15,7 +15,6 @@ use Guzzle\Tests\Mock\MockObserver;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class CurlHandleTest extends \Guzzle\Tests\GuzzleTestCase
 {

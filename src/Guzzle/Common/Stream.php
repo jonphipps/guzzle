@@ -4,8 +4,6 @@ namespace Guzzle\Common;
 
 /**
  * OO interface to PHP streams
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Stream
 {

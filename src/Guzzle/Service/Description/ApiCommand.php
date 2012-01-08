@@ -6,8 +6,6 @@ use Guzzle\Common\Collection;
 
 /**
  * Data object holding the information of an API command
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ApiCommand
 {

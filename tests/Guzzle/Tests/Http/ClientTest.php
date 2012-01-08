@@ -15,7 +15,6 @@ use Guzzle\Http\Client;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ClientTest extends \Guzzle\Tests\GuzzleTestCase
 {

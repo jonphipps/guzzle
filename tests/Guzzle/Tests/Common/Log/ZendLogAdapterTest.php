@@ -9,9 +9,6 @@ use Zend\Log\Logger;
 use Zend\Log\Writer\Stream;
 
 /**
- * Test class for ZendLogAdapter
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Common\Log\AbstractLogAdapter
  * @covers Guzzle\Common\Log\ZendLogAdapter
  */

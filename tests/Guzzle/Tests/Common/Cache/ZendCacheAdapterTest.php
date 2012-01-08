@@ -5,11 +5,6 @@ namespace Guzzle\Tests\Common\Cache;
 use Guzzle\Common\Cache\ZendCacheAdapter;
 use Zend\Cache\Backend\TestBackend;
 
-/**
- * CacheAdapter test case
- *
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class ZendCacheAdapterTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

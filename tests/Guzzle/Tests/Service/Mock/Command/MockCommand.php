@@ -5,8 +5,6 @@ namespace Guzzle\Tests\Service\Mock\Command;
 /**
  * Mock Command
  *
- * @author Michael Dowling <michael@guzzlephp.org>
- *
  * @guzzle test default="123" required="true" doc="Test argument"
  * @guzzle other
  * @guzzle _internal default="abc"

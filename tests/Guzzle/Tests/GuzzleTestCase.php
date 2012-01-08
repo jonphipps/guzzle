@@ -16,8 +16,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Base testcase class for all Guzzle testcases.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 abstract class GuzzleTestCase extends \PHPUnit_Framework_TestCase
 {

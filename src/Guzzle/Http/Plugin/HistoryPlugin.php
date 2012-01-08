@@ -9,8 +9,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Maintains a list of requests and responses sent using a request or client
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class HistoryPlugin implements EventSubscriberInterface, \IteratorAggregate, \Countable
 {

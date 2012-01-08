@@ -5,8 +5,6 @@ namespace Guzzle\Http;
 /**
  * Parses and generates URLs based on URL parts.  In favor of performance,
  * URL parts are not validated.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Url
 {

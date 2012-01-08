@@ -7,7 +7,6 @@ use Monolog\Logger;
 /**
  * Monolog log adapter
  *
- * @author Michael Dowling <michael@guzzlephp.org>
  * @link https://github.com/Seldaek/monolog
  */
 class MonologLogAdapter extends AbstractLogAdapter

@@ -9,9 +9,6 @@ use Guzzle\Http\Message\Response;
 use Guzzle\Http\Plugin\MockPlugin;
 use Guzzle\Http\Client;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class MockPluginTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

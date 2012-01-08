@@ -7,8 +7,6 @@ use Guzzle\Service\Inspector;
 
 /**
  * A ServiceDescription stores service information based on a service document
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ServiceDescription
 {

@@ -6,8 +6,6 @@ use Guzzle\Common\Collection;
 
 /**
  * Guzzle information and utility class
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Guzzle
 {

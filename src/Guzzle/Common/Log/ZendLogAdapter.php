@@ -6,8 +6,6 @@ use Zend\Log\Logger;
 
 /**
  * Adapts a ZF2 Logger object
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ZendLogAdapter extends AbstractLogAdapter
 {

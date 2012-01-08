@@ -11,8 +11,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 /**
  * Plugin to automatically retry failed HTTP requests using truncated
  * exponential backoff.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ExponentialBackoffPlugin implements EventSubscriberInterface
 {

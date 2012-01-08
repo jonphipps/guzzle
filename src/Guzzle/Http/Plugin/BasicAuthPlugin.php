@@ -7,8 +7,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Adds HTTP basic auth to all requests sent from a client
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class BasicAuthPlugin implements EventSubscriberInterface
 {

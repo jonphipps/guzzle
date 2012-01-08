@@ -10,7 +10,6 @@ use Guzzle\Http\Curl\CurlMulti;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ExponentialBackoffPluginTest extends \Guzzle\Tests\GuzzleTestCase
 {

@@ -5,9 +5,6 @@ namespace Guzzle\Tests\Service\Command;
 use Guzzle\Service\Client;
 use Guzzle\Service\Description\XmlDescriptionBuilder;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 abstract class AbstractCommandTest extends \Guzzle\Tests\GuzzleTestCase
 {
     protected function getClient()

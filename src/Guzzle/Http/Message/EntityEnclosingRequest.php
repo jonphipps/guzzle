@@ -8,8 +8,6 @@ use Guzzle\Http\QueryString;
 
 /**
  * HTTP request that sends an entity-body in the request message (POST, PUT)
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class EntityEnclosingRequest extends Request implements EntityEnclosingRequestInterface
 {

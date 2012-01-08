@@ -6,8 +6,6 @@ use Guzzle\Common\Collection;
 
 /**
  * Cookie jar that stores cookies an an array
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ArrayCookieJar implements CookieJarInterface
 {

@@ -9,8 +9,6 @@ use Guzzle\Http\Message\RequestInterface;
 /**
  * Execute a pool of {@see RequestInterface} objects in
  * parallel.
- *
- * @author  michael@guzzlephp.org
  */
 interface CurlMultiInterface extends HasDispatcherInterface, \Countable
 {

@@ -5,7 +5,6 @@ namespace Guzzle\Tests\Service\Description;
 use Guzzle\Service\Description\JsonDescriptionBuilder;
 
 /**
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Service\Description\JsonDescriptionBuilder
  */
 class JsonDescriptionBuilderTest extends \Guzzle\Tests\GuzzleTestCase

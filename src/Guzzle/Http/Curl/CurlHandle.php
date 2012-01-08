@@ -9,8 +9,6 @@ use Guzzle\Http\Url;
 
 /**
  * Immutable wrapper for a cURL handle
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class CurlHandle
 {

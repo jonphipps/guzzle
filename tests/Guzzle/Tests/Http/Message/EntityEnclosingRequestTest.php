@@ -15,7 +15,6 @@ use Guzzle\Http\QueryString;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class EntityEnclosingRequestTest extends \Guzzle\Tests\GuzzleTestCase
 {

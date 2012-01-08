@@ -13,7 +13,6 @@ use Guzzle\Tests\Service\Mock\Command\MockCommand;
 use Guzzle\Http\Plugin\MockPlugin;
 
 /**
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Service\Command\CommandSet
  */
 class CommandSetTest extends AbstractCommandTest

@@ -10,8 +10,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
  * Queues mock responses and delivers mock responses in a fifo order.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class MockPlugin extends AbstractHasDispatcher implements EventSubscriberInterface, \Countable
 {

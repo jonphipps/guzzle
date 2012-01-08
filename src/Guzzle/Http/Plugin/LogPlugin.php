@@ -28,8 +28,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * Be careful when logging entity bodies; before they can
  * be logged, the entire request and response entity bodies must be loaded into
  * memory.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class LogPlugin implements EventSubscriberInterface
 {

@@ -8,9 +8,6 @@ use Guzzle\Service\Description\ServiceDescription;
 use Guzzle\Service\Description\XmlDescriptionBuilder;
 use Guzzle\Service\Description\ApiCommand;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class ServiceDescriptionTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

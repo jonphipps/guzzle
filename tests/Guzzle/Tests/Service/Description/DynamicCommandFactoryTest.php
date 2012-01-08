@@ -9,9 +9,6 @@ use Guzzle\Service\Client;
 use Guzzle\Service\Description\ServiceDescription;
 use Guzzle\Service\Description\ApiCommand;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class DynamicCommandFactoryTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

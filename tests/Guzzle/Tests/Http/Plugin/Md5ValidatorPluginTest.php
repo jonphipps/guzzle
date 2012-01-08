@@ -7,9 +7,6 @@ use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Message\Response;
 use Guzzle\Http\Plugin\Md5ValidatorPlugin;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class Md5ValidatorPluginTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

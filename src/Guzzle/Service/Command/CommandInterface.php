@@ -11,8 +11,6 @@ use Guzzle\Service\Description\ApiCommand;
 /**
  * Command object to handle preparing and processing client requests and
  * responses of the requests
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 interface CommandInterface
 {

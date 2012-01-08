@@ -11,9 +11,6 @@ use Guzzle\Http\Plugin\MockPlugin;
 use Guzzle\Tests\Service\Mock\Command\MockCommand;
 use Guzzle\Tests\Service\Mock\Command\Sub\Sub;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class CommandTest extends AbstractCommandTest
 {
     /**

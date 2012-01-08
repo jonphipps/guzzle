@@ -5,7 +5,6 @@ namespace Guzzle\Tests\Service;
 use Guzzle\Tests\Service\Mock\MockInflector as Inflector;
 
 /**
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Service\Inflector
  */
 class InflectorTest extends \Guzzle\Tests\GuzzleTestCase

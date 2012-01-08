@@ -4,8 +4,6 @@ namespace Guzzle\Service\Description;
 
 /**
  * Build service descriptions
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 interface DescriptionBuilderInterface
 {

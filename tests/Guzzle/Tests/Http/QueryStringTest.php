@@ -4,9 +4,6 @@ namespace Guzzle\Tests\Http;
 
 use Guzzle\Http\QueryString;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class QueryStringTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

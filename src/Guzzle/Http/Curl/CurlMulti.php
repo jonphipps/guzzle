@@ -11,8 +11,6 @@ use Guzzle\Http\Message\RequestException;
 /**
  * Execute a pool of {@see RequestInterface} objects in parallel using
  * curl_multi
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
 {

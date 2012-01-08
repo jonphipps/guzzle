@@ -10,8 +10,6 @@ use Guzzle\Http\Curl\CurlMultiInterface;
 
 /**
  * Client interface for send HTTP requests
- *
- * @author  michael@guzzlephp.org
  */
 interface ClientInterface extends HasDispatcherInterface
 {

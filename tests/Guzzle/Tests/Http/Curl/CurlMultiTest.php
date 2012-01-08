@@ -16,7 +16,6 @@ use Guzzle\Tests\Mock\MockMulti;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Http\Curl\CurlMulti
  */
 class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase

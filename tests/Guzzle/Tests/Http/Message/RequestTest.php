@@ -19,7 +19,6 @@ use Guzzle\Tests\Mock\MockObserver;
 
 /**
  * @group server
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class RequestTest extends \Guzzle\Tests\GuzzleTestCase
 {

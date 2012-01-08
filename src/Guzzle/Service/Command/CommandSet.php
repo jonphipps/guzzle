@@ -13,8 +13,6 @@ use Guzzle\Service\Command\CommandInterface;
  * Commands from different services using different clients can be sent in
  * parallel if each command has an associated {@see ClientInterface} before
  * executing the set.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class CommandSet implements \IteratorAggregate, \Countable
 {

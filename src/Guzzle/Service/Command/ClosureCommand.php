@@ -9,8 +9,6 @@ use Guzzle\Http\Message\RequestInterface;
  * runtime using a closure to prepare the request.  A closure key and \Closure
  * value must be passed to the command in the constructor.  The closure must
  * accept the command object as an argument.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class ClosureCommand extends AbstractCommand
 {

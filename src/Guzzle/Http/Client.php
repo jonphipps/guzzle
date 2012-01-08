@@ -16,8 +16,6 @@ use Guzzle\Http\Curl\CurlMulti;
 
 /**
  * HTTP client
- *
- * @author  michael@guzzlephp.org
  */
 class Client extends AbstractHasDispatcher implements ClientInterface
 {

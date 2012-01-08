@@ -11,8 +11,6 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  * Ensures that an the MD5 hash of an entity body matches the Content-MD5
  * header (if set) of an HTTP response.  An exception is thrown if the
  * calculated MD5 does not match the expected MD5.
- *
- * @author Michael Dowling <michael@guzzlephp.org>
  */
 class Md5ValidatorPlugin implements EventSubscriberInterface
 {

@@ -5,7 +5,6 @@ namespace Guzzle\Tests\Http\Curl;
 use Guzzle\Http\Curl\CurlException;
 
 /**
- * @author Michael Dowling <michael@guzzlephp.org>
  * @covers Guzzle\Http\Curl\CurlException
  */
 class CurlExceptionTest extends \Guzzle\Tests\GuzzleTestCase

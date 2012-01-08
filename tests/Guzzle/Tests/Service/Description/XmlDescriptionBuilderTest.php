@@ -6,9 +6,6 @@ use Guzzle\Service\Inspector;
 use Guzzle\Service\Description\ServiceDescription;
 use Guzzle\Service\Description\XmlDescriptionBuilder;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class XmlDescriptionBuilderTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**

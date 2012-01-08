@@ -4,9 +4,6 @@ namespace Guzzle\Tests\Common;
 
 use Guzzle\Common\Event;
 
-/**
- * @author Michael Dowling <michael@guzzlephp.org>
- */
 class EventTest extends \Guzzle\Tests\GuzzleTestCase
 {
     /**
