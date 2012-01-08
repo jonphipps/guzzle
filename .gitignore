@@ -1,9 +1,20 @@
+# Ingore common cruft
 .DS_STORE
 coverage
-phpunit.xml
+
+# Ignore binary files
 guzzle.phar
-src/Guzzle/Aws/
-src/Guzzle/CardinalCommerce/
-src/Guzzle/Unfuddle/
+
+# Ignore potentially sensitive phpunit file
+phpunit.xml
+
+# Helps to ignore services being tested
+src/Guzzle/
+!src/Guzzle/Guzzle.php
+!src/Guzzle/Common
+!src/Guzzle/Http
+!src/Guzzle/Service
+
+# Ignore composer generated files
 composer.lock
-vendor/.composer
+vendor/

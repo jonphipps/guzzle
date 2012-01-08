@@ -1,12 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <project name="guzzle" default="init">
-
-    <target name="vendors" description="Initialize vendors">
-        <echo msg="Initializing vendors" />
-        <exec command="git submodule update --init" />
-    </target>
-
     <target name="phar" description="Create a phar with an autoloader">
         <if>
             <equals arg1="${autoload}" arg2="false" />

@@ -7,6 +7,3 @@ before_script:
   - cp phpunit.xml.dist phpunit.xml
   - ~/.nvm/nvm.sh run default tests/Guzzle/Tests/Http/server.js &
 script: sudo phpunit
-notifications:
-  email:
-    - michael@guzzlephp.org
