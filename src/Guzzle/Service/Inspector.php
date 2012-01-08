@@ -305,6 +305,17 @@ class Inspector
                 }
             }
 
+            // Run the value through attached filters
+            if ($filters = $arg->get('filters')) {
+                foreach (explode(',', $filters) as $filter) {
+                    if (strpos($filter, '::')) {
+                        $config->set($name, call_user_func(explode('::', $filter), $config->get($name)));
+                    } else {
+                        $config->set($name, call_user_func($filter, $config->get($name)));
+                    }
+                }
+            }
+
             // Check the length values
             if ($arg->get('min_length') && strlen($config->get($name)) < $arg->get('min_length')) {
                 $errors[] = 'Requires that the ' . $name . ' argument be >= ' . $arg->get('min_length') . ' characters.';

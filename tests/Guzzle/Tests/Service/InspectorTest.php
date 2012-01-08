@@ -25,11 +25,17 @@ use Symfony\Component\Validator\Mapping\ClassMetadataFactory;
  * @guzzle date type="date"
  * @guzzle timestamp type="time"
  * @guzzle string type="string"
- * @guzzle username required="true"
+ * @guzzle username required="true" filters="strtolower"
  * @guzzle dynamic default="{{username}}_{{ string }}_{{ does_not_exist }}"
+ * @guzzle test_function type="string" filters="Guzzle\Tests\Common\InspectorTest::strtoupper"
  */
 class InspectorTest extends \Guzzle\Tests\GuzzleTestCase
 {
+    public static function strtoupper($string)
+    {
+        return strtoupper($string);
+    }
+
     /**
      * @covers Guzzle\Service\Inspector::validateClass
      * @expectedException InvalidArgumentException
@@ -317,5 +323,19 @@ Requires that the max argument be <= 2 characters.", implode("\n", $result));
             array(),
             Inspector::getInstance()->parseDocBlock('testing')
         );
+    }
+
+    /**
+     * @covers Guzzle\Service\Inspector::validateConfig
+     */
+    public function testRunsValuesThroughFilters()
+    {
+        $data = new Collection(array(
+            'username' => 'TEST',
+            'test_function'   => 'foo'
+        ));
+        Inspector::getInstance()->validateClass(__CLASS__, $data);
+        $this->assertEquals('test', $data->get('username'));
+        $this->assertEquals('FOO', $data->get('test_function'));
     }
 }
