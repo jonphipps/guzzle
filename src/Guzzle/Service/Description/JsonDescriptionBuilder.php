@@ -18,7 +18,7 @@ class JsonDescriptionBuilder implements DescriptionBuilderInterface
         $data = json_decode($json, true);
 
         // Handle includes
-        if (isset($data['includes'])) {
+        if (!empty($data['includes'])) {
             foreach ($data['includes'] as $path) {
                 if ($path[0] != DIRECTORY_SEPARATOR) {
                     $path = dirname($jsonFile) . DIRECTORY_SEPARATOR . $path;

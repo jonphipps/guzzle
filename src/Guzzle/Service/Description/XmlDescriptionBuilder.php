@@ -36,7 +36,7 @@ class XmlDescriptionBuilder implements DescriptionBuilderInterface
                 if ($path[0] != DIRECTORY_SEPARATOR) {
                     $path = dirname($file) . DIRECTORY_SEPARATOR . $path;
                 }
-                $data = array_merge($data, self::parseXmlFile($path));
+                $data = array_merge_recursive(self::parseXmlFile($path), $data);
             }
         }
 

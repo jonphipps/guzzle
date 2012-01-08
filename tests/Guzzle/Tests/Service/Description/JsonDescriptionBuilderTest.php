@@ -24,7 +24,6 @@ class JsonDescriptionBuilderTest extends \Guzzle\Tests\GuzzleTestCase
         $this->assertTrue($description->hasCommand('test'));
         $test = $description->getCommand('test');
         $this->assertEquals('/path', $test->getPath());
-
         $test = $description->getCommand('concrete');
         $this->assertEquals('/abstract', $test->getPath());
     }
