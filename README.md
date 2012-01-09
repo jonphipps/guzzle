@@ -102,13 +102,12 @@ Send requests in parallel
 ```php
 <?php
 
-use Guzzle\Service\Client;
-
 try {
-    $responses = $client->batch(array(
-        $client->get('http://www.google.com/'),
-        $client->head('http://www.google.com/'),
-        $client->get('https://www.github.com/')
+    $client = new Guzzle\Service\Client('http://www.myapi.com/api/v1');
+    $responses = $client->send(array(
+        $client->get('users'),
+        $client->head('messages/123'),
+        $client->delete('orders/123')
     ));
 } catch (Guzzle\Common\ExceptionCollection $e) {
     echo "The following requests encountered an exception: \n";
