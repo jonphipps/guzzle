@@ -27,7 +27,8 @@
                 },
                 "source": {
                     "url": "https://github.com/KnpLabs/zend-log.git",
-                    "type": "git"
+                    "type": "git",
+                    "reference": "master"
                 }
             }
         },
@@ -43,7 +44,8 @@
                 },
                 "source": {
                     "url": "https://github.com/KnpLabs/zend-cache.git",
-                    "type": "git"
+                    "type": "git",
+                    "reference": "master"
                 }
             }
         }
@@ -56,7 +58,6 @@
     },
     "suggest": {
         "symfony/class-loader": "*",
-        "symfony/finder": "*",
         "doctrine/common": "*",
         "monolog/monolog": "*",
         "zend/zend-cache": "*",

@@ -8,7 +8,7 @@
                     destfile="./guzzle-min.phar"
                     basedir="."
                     alias="Guzzle"
-                    signature="sha1">
+                    signature="md5">
                     <fileset dir=".">
                         <include name="src/**/*.php" />
                     </fileset>
@@ -23,10 +23,12 @@
                     basedir="."
                     stub="autoload.php"
                     alias="Guzzle"
-                    signature="sha1">
+                    signature="md5">
                     <fileset dir=".">
                         <include name="src/**/*.php" />
-                        <include name="vendor/symfony/**/*.php" />
+                        <include name="vendor/symfony/class-loader/Symfony/Component/ClassLoader/UniversalClassLoader.php" />
+                        <include name="vendor/symfony/event-dispatcher/**/*.php" />
+                        <include name="vendor/symfony/validator/**/*.php" />
                         <include name="vendor/doctrine/common/lib/Doctrine/Common/Cache/*.php" />
                         <include name="vendor/monolog/monolog/src/**/*.php" />
                     </fileset>
