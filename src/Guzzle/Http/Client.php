@@ -20,9 +20,9 @@ use Guzzle\Http\Curl\CurlMulti;
 class Client extends AbstractHasDispatcher implements ClientInterface
 {
     /**
-     * @var string Your application's name and version (e.g. MyApp/1.0)
+     * @var string User-Agent header to apply to all requests
      */
-    protected $userApplication = null;
+    protected $userAgent = null;
 
     /**
      * @var Collection Parameter object holding configuration data
@@ -161,9 +161,8 @@ class Client extends AbstractHasDispatcher implements ClientInterface
     {
         $request->setClient($this);
 
-        // Add your application name to the request
-        if ($this->userApplication) {
-            $request->setHeader('User-Agent', trim($this->userApplication . ' ' . $request->getHeader('User-Agent')));
+        if ($this->userAgent) {
+            $request->setHeader('User-Agent', $this->userAgent);
         }
 
         // Add any curl options that might in the config to the request
@@ -225,14 +224,18 @@ class Client extends AbstractHasDispatcher implements ClientInterface
      * Set the name of your application and application version that will be
      * appended to the User-Agent header of all reqeusts.
      *
-     * @param string $appName Name of your application
-     * @param string $version Version number of your application
+     * @param string $userAgent User agent string
+     * @param bool $includeDefault (optional) Set to TRUE to append the default
+     *    Guzzle user agent
      *
      * @return Client
      */
-    public function setUserApplication($appName, $version)
+    public function setUserAgent($userAgent, $includeDefault = false)
     {
-        $this->userApplication = $appName . '/' . ($version ?: '1.0');
+        $this->userAgent = $userAgent;
+        if ($includeDefault) {
+            $this->userAgent .= ' ' . Guzzle::getDefaultUserAgent();
+        }
 
         return $this;
     }

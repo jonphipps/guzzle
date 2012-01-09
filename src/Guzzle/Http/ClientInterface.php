@@ -99,12 +99,13 @@ interface ClientInterface extends HasDispatcherInterface
      * Set the name of your application and application version that will be
      * appended to the User-Agent header of all reqeusts.
      *
-     * @param string $appName Name of your application
-     * @param string $version Version number of your application
+     * @param string $userAgent User agent string
+     * @param bool $includeDefault (optional) Set to TRUE to append the default
+     *    Guzzle user agent
      *
      * @return ClientInterface
      */
-    function setUserApplication($appName, $version);
+    function setUserAgent($userAgent, $includeDefault = false);
 
     /**
      * Create a GET request for the client

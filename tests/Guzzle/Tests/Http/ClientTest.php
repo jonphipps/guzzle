@@ -150,19 +150,20 @@ class ClientTest extends \Guzzle\Tests\GuzzleTestCase
     }
 
     /**
-     * @covers Guzzle\Http\Client::setUserApplication
+     * @covers Guzzle\Http\Client::setUserAgent
      * @covers Guzzle\Http\Client::createRequest
      * @covers Guzzle\Http\Client::prepareRequest
      */
-    public function testSetsUserApplication()
+    public function testSetsUserAgent()
     {
         $client = new Client('http://www.test.com/', array(
             'api' => 'v1'
         ));
 
-        $this->assertSame($client, $client->setUserApplication('Test', '1.0Ab'));
-        $request = $client->get();
-        $this->assertEquals('Test/1.0Ab ' . Guzzle::getDefaultUserAgent(), $request->getHeader('User-Agent'));
+        $this->assertSame($client, $client->setUserAgent('Test/1.0Ab', true));
+        $this->assertEquals('Test/1.0Ab ' . Guzzle::getDefaultUserAgent(), $client->get()->getHeader('User-Agent'));
+        $client->setUserAgent('Test/1.0Ab');
+        $this->assertEquals('Test/1.0Ab', $client->get()->getHeader('User-Agent'));
     }
 
     /**

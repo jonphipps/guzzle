@@ -21,11 +21,6 @@ class Client extends HttpClient implements ClientInterface
     protected $serviceDescription;
 
     /**
-     * @var string Your application's name and version (e.g. MyApp/1.0)
-     */
-    protected $userApplication = null;
-
-    /**
      * Basic factory method to create a new client.  Extend this method in
      * subclasses to build more complex clients.
      *
