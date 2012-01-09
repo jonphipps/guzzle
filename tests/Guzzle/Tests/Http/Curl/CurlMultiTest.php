@@ -358,6 +358,37 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
 
     /**
      * @covers Guzzle\Http\Curl\CurlMulti
+     * @expectedException RuntimeException
+     * @expectedExceptionMessage Testing!
+     */
+    public function testCatchesExceptionsBeforeSendingCurlMulti()
+    {
+        $client = new Client($this->getServer()->getUrl());
+        $multi = new CurlMulti();
+        $client->setCurlMulti($multi);
+        $multi->getEventDispatcher()->addListener(CurlMulti::BEFORE_SEND, function() {
+            throw new \RuntimeException('Testing!');
+        });
+        $client->get()->send();
+    }
+
+    /**
+     * @covers Guzzle\Http\Curl\CurlMulti
+     * @expectedException Guzzle\Common\ExceptionCollection
+     * @expectedExceptionMessage Thrown before sending!
+     */
+    public function testCatchesExceptionsBeforeSendingRequests()
+    {
+        $client = new Client($this->getServer()->getUrl());
+        $request = $client->get();
+        $request->getEventDispatcher()->addListener('request.before_send', function() {
+            throw new \RuntimeException('Thrown before sending!');
+        });
+        $client->send(array($request));
+    }
+
+    /**
+     * @covers Guzzle\Http\Curl\CurlMulti
      * @expectedException Guzzle\Http\Message\BadResponseException
      */
     public function testCatchesExceptionsWhenRemovingQueuedRequests()

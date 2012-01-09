@@ -105,6 +105,11 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     }
 
     /**
+     * Adds a request to the next scope (or batch or requests to be sent).  If
+     * a request is added using async, then the request is added to the current
+     * scope.  This means that the request will be sent and polled if requests
+     * are currently being sent, or that the request will be sent in the next
+     * send operation.
      * {@inheritdoc}
      */
     public function add(RequestInterface $request, $async = false)
@@ -151,6 +156,8 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
      */
     public function remove(RequestInterface $request)
     {
+        // If currently sending a requests, then we need to remove a
+        // curl easy handle from the curl multi handle
         if ($this->state == self::STATE_SENDING && $this->multiHandle) {
             $handle = $this->getRequestHandle($request) ?: $request->getParams('curl_handle');
             if ($handle instanceof CurlHandle && $handle->getHandle()) {
@@ -198,19 +205,17 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
 
         // Don't prepare for sending again if send() is called while sending
         if ($this->state != self::STATE_SENDING) {
-            try {
-                $requests = $this->all();
-                $this->dispatch(self::BEFORE_SEND, array(
-                    'requests' => $requests
-                ));
-                $this->state = self::STATE_SENDING;
-                foreach ($requests as $request) {
-                    if ($request->getState() != RequestInterface::STATE_TRANSFER) {
-                        $this->beforeSend($request);
-                    }
+            $requests = $this->all();
+            // Any exceptions thrown from this event should break the entire
+            // flow of sending requests in parallel to prevent weird errors
+            $this->dispatch(self::BEFORE_SEND, array(
+                'requests' => $requests
+            ));
+            $this->state = self::STATE_SENDING;
+            foreach ($requests as $request) {
+                if ($request->getState() != RequestInterface::STATE_TRANSFER) {
+                    $this->beforeSend($request);
                 }
-            } catch (\Exception $e) {
-                $this->exceptions[] = $e;
             }
         }
 
@@ -259,17 +264,23 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
             $request->dispatch('request.before_send', array(
                 'request' => $request
             ));
-            // Requests might decide they don't need to be sent just before xfer
             if ($request->getState() != RequestInterface::STATE_TRANSFER) {
+                // Requests might decide they don't need to be sent just before
+                // transfer (e.g. CachePlugin)
                 $this->remove($request);
             } else if ($request->getParams()->get('queued_response')) {
+                // Queued responses do not need to be sent using curl
                 $this->remove($request);
                 $request->setState(RequestInterface::STATE_COMPLETE);
             } else {
+                // Add the request's curl handle to the multi handle
                 curl_multi_add_handle($this->multiHandle, $this->createCurlHandle($request)->getHandle());
             }
         } catch (\Exception $e) {
             $this->exceptions[] = $e;
+            // Remove request as it has gone bad for some reason
+            $this->remove($request);
+            $request->setState(RequestInterface::STATE_ERROR);
         }
     }
 
