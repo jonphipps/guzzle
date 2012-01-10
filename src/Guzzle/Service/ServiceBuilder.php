@@ -133,8 +133,8 @@ class ServiceBuilder implements \ArrayAccess
 
         // Convert references to the actual client
         foreach ($this->builderConfig[$name]['params'] as $k => &$v) {
-            if (0 === strpos($v, '$.')) {
-                $v = $this->get(str_replace('$.', '', $v));
+            if (0 === strpos($v, '{{') && strlen($v) - 2 == strpos($v, '}}')) {
+                $v = $this->get(trim(substr($v, 2, -2)));
             }
         }
 
