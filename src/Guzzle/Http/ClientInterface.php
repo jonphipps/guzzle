@@ -118,7 +118,7 @@ interface ClientInterface extends HasDispatcherInterface
      *
      * @return RequestInterface
      */
-    function get($uri = null, $inject = null);
+    function get($uri = null, $headers = null, $body = null);
 
     /**
      * Create a HEAD request for the client
