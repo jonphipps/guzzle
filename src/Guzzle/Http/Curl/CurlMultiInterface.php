@@ -57,9 +57,11 @@ interface CurlMultiInterface extends HasDispatcherInterface, \Countable
     function remove(RequestInterface $request);
 
     /**
-     * Reset the state of the Pool and remove any attached RequestInterface objects
+     * Reset the state of the multi and remove any attached RequestInterface objects
+     *
+     * @param bool $hard (optional) Set to TRUE to close any open multi handles
      */
-    function reset();
+    function reset($hard = false);
 
     /**
      * Send a pool of {@see RequestInterface} requests.

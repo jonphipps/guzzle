@@ -5,6 +5,7 @@ namespace Guzzle\Tests\Http\Curl;
 use Guzzle\Common\Event;
 use Guzzle\Common\ExceptionCollection;;
 use Guzzle\Common\Collection;
+use Guzzle\Common\Log\ClosureLogAdapter;
 use Guzzle\Http\Client;
 use Guzzle\Http\Message\Request;
 use Guzzle\Http\Message\Response;
@@ -12,6 +13,7 @@ use Guzzle\Http\Message\RequestFactory;
 use Guzzle\Http\Curl\CurlHandle;
 use Guzzle\Http\Curl\CurlMulti;
 use Guzzle\Http\Curl\CurlException;
+use Guzzle\Http\Plugin\LogPlugin;
 use Guzzle\Tests\Mock\MockMulti;
 
 /**
@@ -451,5 +453,34 @@ class ExceptionCollectionTest extends \Guzzle\Tests\GuzzleTestCase
         $multi->add($request);
         $multi->send();
         $this->assertEquals(0, count($this->getServer()->getReceivedRequests(false)));
+    }
+
+    /**
+     * @covers Guzzle\Http\Curl\CurlMulti::reset
+     *
+     */
+    public function testHardResetReopensMultiHandle()
+    {
+        $this->getServer()->enqueue(array(
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n",
+            "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"
+        ));
+
+        $client = new Client($this->getServer()->getUrl());
+        $message = '';
+        $plugin = new LogPlugin(new ClosureLogAdapter(function($msg) use (&$message) {
+            $message .= $msg . "\n";
+        }), LogPlugin::LOG_VERBOSE);
+        $client->getEventDispatcher()->addSubscriber($plugin);
+
+        $request = $client->get();
+        $multi = new CurlMulti();
+        $multi->add($request);
+        $multi->send();
+        $multi->reset(true);
+        $multi->add($request);
+        $multi->send();
+
+        $this->assertNotContains('Re-using existing connection', $message);
     }
 }

@@ -101,7 +101,9 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
      */
     public function __destruct()
     {
-        @curl_multi_close($this->multiHandle);
+        if (is_resource($this->multiHandle)) {
+            curl_multi_close($this->multiHandle);
+        }
     }
 
     /**
@@ -185,15 +187,21 @@ class CurlMulti extends AbstractHasDispatcher implements CurlMultiInterface
     /**
      * {@inheritdoc}
      */
-    public function reset()
+    public function reset($hard = false)
     {
         // Remove each request
         foreach ($this->all() as $request) {
             $this->remove($request);
         }
+
         $this->requests = $this->exceptions = array();
         $this->state = self::STATE_IDLE;
         $this->scope = -1;
+
+        if ($hard) {
+            curl_multi_close($this->multiHandle);
+            $this->multiHandle = curl_multi_init();
+        }
     }
 
     /**
